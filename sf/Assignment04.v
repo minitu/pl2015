@@ -303,12 +303,16 @@ Qed.
 
 Definition partition {X : Type} (test : X -> bool) (l : list X)
                      : list X * list X :=
-(* FILL IN HERE *) admit.
+((filter test l), (filter (fun x => if test x then false else true) l)).
 
 Example test_partition1: partition oddb [1;2;3;4;5] = ([1;3;5], [2;4]).
-(* FILL IN HERE *) Admitted.
+Proof.
+  reflexivity.
+Qed.
 Example test_partition2: partition (fun x => false) [5;9;0] = ([], [5;9;0]).
-(* FILL IN HERE *) Admitted.
+Proof.
+  reflexivity.
+Qed.
 (** [] *)
 
 
@@ -325,10 +329,22 @@ Example test_partition2: partition (fun x => false) [5;9;0] = ([], [5;9;0]).
 (** Show that [map] and [rev] commute.  You may need to define an
     auxiliary lemma. *)
 
+Lemma map_sep : forall (X Y : Type) (f : X -> Y) (l : list X) (x : X),
+  map f (snoc l x) = snoc (map f l) (f x).
+Proof.
+  intros. induction l.
+  - reflexivity.
+  - simpl. rewrite IHl. reflexivity.
+Qed.
+
 Theorem map_rev : forall (X Y : Type) (f : X -> Y) (l : list X),
   map f (rev l) = rev (map f l).
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros.
+  induction l.
+  - reflexivity.
+  - simpl. rewrite <- IHl. rewrite map_sep. reflexivity.
+Qed.
 (** [] *)
 
 
@@ -354,12 +370,17 @@ Proof.
 
 Fixpoint flat_map {X Y:Type} (f:X -> list Y) (l:list X)
                    : (list Y) :=
-  (* FILL IN HERE *) admit.
+  match l with
+  | [] => []
+  | h :: t => (f h) ++ (flat_map f t)
+  end.
 
 Example test_flat_map1:
   flat_map (fun n => [n;n;n]) [1;5;4]
   = [1; 1; 1; 5; 5; 5; 4; 4; 4].
- (* FILL IN HERE *) Admitted.
+Proof.
+  reflexivity.
+Qed.
 (** [] *)
 
 
@@ -376,10 +397,12 @@ Example test_flat_map1:
 Theorem override_example : forall (b:bool),
   (override (constfun b) 3 true) 2 = b.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros.
+  destruct b.
+  - reflexivity.
+  - reflexivity.
+Qed.
 (** [] *)
-
-
 
 
 
@@ -393,7 +416,10 @@ Theorem override_neq : forall (X:Type) x1 x2 k1 k2 (f : nat->X),
   beq_nat k2 k1 = false ->
   (override f k2 x2) k1 = x1.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros.
+  unfold override.
+  rewrite H0. apply H.
+Qed.
 (** [] *)
 
 
@@ -418,7 +444,11 @@ Definition fold_length {X : Type} (l : list X) : nat :=
 Theorem fold_length_correct : forall X (l : list X),
   fold_length l = length l.
 Proof.
-(* FILL IN HERE *) Admitted. 
+  intros.
+  induction l.
+  - reflexivity.
+  - simpl. rewrite <- IHl. unfold fold_length. simpl. reflexivity.
+Qed.
 (** [] *)
 
 
@@ -440,14 +470,18 @@ Proof.
     below. *)
 
 Definition fold_map {X Y:Type} (f : X -> Y) (l : list X) : list Y :=
-(* FILL IN HERE *) admit.
+  fold (fun x t => f x :: t) l [].
 
 (** Prove the correctness of [fold_map]. *)
 
 Theorem fold_map_correct : forall (X Y:Type) (f : X -> Y) (l : list X),
   fold_map f l = map f l.
 Proof.
-(* FILL IN HERE *) Admitted. 
+  intros.
+  induction l.
+  - reflexivity.
+  - simpl. unfold fold_map in IHl. unfold fold_map. simpl. rewrite -> IHl. reflexivity.
+Qed.
 
 (** [] *)
 
@@ -480,7 +514,9 @@ Theorem silly_ex :
      evenb 3 = true ->
      oddb 4 = true.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros.
+  apply H. apply H0.
+Qed.
 (** [] *)
 
 
@@ -502,7 +538,9 @@ Theorem rev_exercise1 : forall (l l' : list nat),
      l = rev l' ->
      rev l = l'.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros.
+  rewrite H. rewrite rev_involutive. reflexivity.
+Qed.
 (** [] *)
 
 
@@ -528,7 +566,11 @@ Example trans_eq_exercise : forall (n m o p : nat),
      (n + p) < (minustwo o) ->
      (n + p) < m. 
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros.
+  apply trans_lt with (n:=n+p) (m:=minustwo o) (o:=m).
+  - apply H0.
+  - apply H.
+Qed.
 (** [] *)
 
 
@@ -548,7 +590,9 @@ Example sillyex1 : forall (X : Type) (x y z : X) (l j : list X),
      y :: l = x :: j ->
      x = y.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros.
+  inversion H0. reflexivity.
+Qed.
 (** [] *)
 
 
@@ -571,7 +615,9 @@ Example sillyex2 : forall (X : Type) (x y z : X) (l j : list X),
      y :: l = z :: j ->
      x = z.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros.
+  inversion H.
+Qed.
 (** [] *)
 
 
@@ -593,7 +639,11 @@ Proof.
 Theorem beq_nat_0_l : forall n,
    beq_nat 0 n = true -> n = 0.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros.
+  destruct n.
+  - reflexivity.
+  - inversion H.
+Qed.
 
 (** [] *)
 
@@ -623,7 +673,14 @@ Proof.
   intros n. induction n as [| n'].
     (* Hint: use the [destruct] and [inversion] tactics. *)
     (* Hint: use the plus_n_Sm lemma *)
-    (* FILL IN HERE *) Admitted.
+  - intros. simpl in H. destruct m.
+    + reflexivity.
+    + simpl in H. inversion H.
+  - intros. destruct m.
+    + inversion H.
+    + inversion H. rewrite <- plus_n_Sm in H1. rewrite <- plus_n_Sm in H1. inversion H1.
+      apply IHn' in H2. rewrite H2. reflexivity.
+Qed.
 (** [] *)
 
 
@@ -648,7 +705,15 @@ Proof.
 Theorem beq_nat_true : forall n m,
     beq_nat n m = true -> n = m.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros n.
+  induction n.
+  - destruct m.
+    + reflexivity.
+    + intros. inversion H.
+  - destruct m.
+    + intros. inversion H.
+    + intros. apply f_equal. inversion H. apply IHn. apply H1.
+Qed.
 (** [] *)
 
 
@@ -673,7 +738,14 @@ Theorem index_after_last: forall (n : nat) (X : Type) (l : list X),
      length l = n ->
      index n l = None.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros.
+  generalize dependent n.
+  induction l.
+  - reflexivity.
+  - intros. destruct n.
+    + inversion H.
+    + simpl in H. inversion H. rewrite H1. simpl. apply IHl. apply H1.
+Qed.
 (** [] *)
 
 
@@ -698,7 +770,16 @@ Theorem double_induction: forall (P : nat -> nat -> Prop),
   (forall m n, P m n -> P (S m) (S n)) ->
   forall m n, P m n.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros. generalize dependent n.
+  induction m.
+  - induction n.
+    + apply H.
+    + apply H1. apply IHn.
+  - induction n.
+    + apply H0. apply IHm.
+    + apply H2. apply IHm.
+Qed.
+
 (** [] *)
 
 
@@ -714,7 +795,11 @@ Proof.
 Theorem override_shadow : forall (X:Type) x1 x2 k1 k2 (f : nat->X),
   (override (override f k1 x2) k1 x1) k2 = (override f k1 x1) k2.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros.
+  unfold override. destruct (beq_nat k1 k2).
+  - reflexivity.
+  - reflexivity.
+Qed.
 (** [] *)
 
 
@@ -735,7 +820,20 @@ Theorem bool_fn_applied_thrice :
   forall (f : bool -> bool) (b : bool), 
   f (f (f b)) = f b.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros.
+  destruct b.
+  - destruct (f true) eqn:f_true.
+    + rewrite f_true. apply f_true.
+    + destruct (f false) eqn:f_false.
+      * apply f_true.
+      * apply f_false.
+  - destruct (f false) eqn:f_false.
+    + destruct (f true) eqn:f_true.
+      * apply f_true.
+      * apply f_false.
+    + rewrite f_false. apply f_false.
+Qed.
+    
 (** [] *)
 
 
@@ -753,7 +851,12 @@ Theorem override_same : forall (X:Type) x1 k1 k2 (f : nat->X),
   f k1 = x1 -> 
   (override f k1 x1) k2 = f k2.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros.
+  unfold override.
+  destruct (beq_nat k1 k2) eqn:beq.
+  - apply beq_nat_true in beq. rewrite <- beq. symmetry. apply H.
+  - reflexivity.
+Qed.
 (** [] *)
 
 
@@ -773,7 +876,13 @@ Theorem filter_exercise : forall (X : Type) (test : X -> bool)
      filter test l = x :: lf ->
      test x = true.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros. generalize dependent lf.
+  induction l.
+  - intros. inversion H.
+  - simpl. destruct (test x0) eqn:tx.
+    + intros. inversion H. rewrite <- tx. apply f_equal. symmetry. apply H1.
+    + apply IHl.
+Qed.
 (** [] *)
 
 
