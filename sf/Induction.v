@@ -380,7 +380,11 @@ Proof.
 Theorem plus_swap : forall n m p : nat, 
   n + (m + p) = m + (n + p).
 Proof.
-  admit.
+  intros.
+  rewrite plus_assoc. rewrite plus_assoc.
+  assert (H: n + m = m + n).
+  - rewrite plus_comm. reflexivity.
+  - rewrite H. reflexivity.
 Qed.
 
 
@@ -389,10 +393,21 @@ Qed.
     in the proof of this one.)  You may find that [plus_swap] comes in
     handy. *)
 
+Theorem mult_n_Sm : forall n m : nat, n * S m = n + n * m.
+Proof.
+  intros.
+  induction n.
+  - reflexivity.
+  - simpl. rewrite -> IHn. rewrite -> plus_swap. reflexivity.
+Qed.
+
 Theorem mult_comm : forall m n : nat,
  m * n = n * m.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros. induction n.
+  - simpl. rewrite mult_0_r. reflexivity.
+  - simpl. rewrite mult_n_Sm. rewrite IHn. reflexivity.
+Qed.
 (** [] *)
 
 (** **** Exercise: 2 stars, optional (evenb_n__oddb_Sn)  *)
@@ -402,7 +417,13 @@ Proof.
 Theorem evenb_n__oddb_Sn : forall n : nat,
   evenb n = negb (evenb (S n)).
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros.
+  induction n.
+  - reflexivity.
+  - simpl. rewrite IHn. rewrite negb_involutive. destruct n.
+    + reflexivity.
+    + reflexivity.
+Qed.
 (** [] *)
 
 (* ###################################################################### *)
@@ -420,31 +441,47 @@ Proof.
 Theorem ble_nat_refl : forall n:nat,
   true = ble_nat n n.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros. induction n.
+  - reflexivity.
+  - simpl. rewrite -> IHn. reflexivity.
+Qed.
 
 Theorem zero_nbeq_S : forall n:nat,
   beq_nat 0 (S n) = false.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros.
+  reflexivity.
+Qed.
 
 Theorem andb_false_r : forall b : bool,
   andb b false = false.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  destruct b.
+  - reflexivity.
+  - reflexivity.
+Qed.
 
 Theorem plus_ble_compat_l : forall n m p : nat, 
   ble_nat n m = true -> ble_nat (p + n) (p + m) = true.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros.
+  induction p.
+  - simpl. rewrite H. reflexivity.
+  - simpl. rewrite IHp. reflexivity.
+Qed.
 
 Theorem S_nbeq_0 : forall n:nat,
   beq_nat (S n) 0 = false.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros. reflexivity.
+Qed.
 
 Theorem mult_1_l : forall n:nat, 1 * n = n.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros. simpl. induction n.
+  - reflexivity.
+  - simpl. rewrite IHn. reflexivity.
+Qed.
 
 Theorem all3_spec : forall b c : bool,
     orb
@@ -453,17 +490,31 @@ Theorem all3_spec : forall b c : bool,
                (negb c))
   = true.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros.
+  destruct b.
+  - simpl. destruct c.
+    + reflexivity.
+    + reflexivity.
+  - simpl. reflexivity.
+Qed.
 
 Theorem mult_plus_distr_r : forall n m p : nat,
   (n + m) * p = (n * p) + (m * p).
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros.
+  induction n.
+  - simpl. reflexivity.
+  - simpl. rewrite IHn. rewrite plus_assoc. reflexivity.
+Qed.
 
 Theorem mult_assoc : forall n m p : nat,
   n * (m * p) = (n * m) * p.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros.
+  induction n.
+  - simpl. reflexivity.
+  - simpl. rewrite IHn. rewrite mult_plus_distr_r. reflexivity.
+Qed.
 (** [] *)
 
 (** **** Exercise: 2 stars, optional (beq_nat_refl)  *)
@@ -476,7 +527,10 @@ problem using the theorem no matter which way we state it. *)
 Theorem beq_nat_refl : forall n : nat, 
   true = beq_nat n n.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros. induction n.
+  - reflexivity.
+  - simpl. rewrite IHn. reflexivity.
+Qed.
 (** [] *)
 
 (** **** Exercise: 2 stars, optional (plus_swap')  *)
@@ -494,7 +548,11 @@ Proof.
 Theorem plus_swap' : forall n m p : nat, 
   n + (m + p) = m + (n + p).
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros.
+  rewrite plus_assoc. rewrite plus_assoc. replace (n + m) with (m + n).
+  - reflexivity.
+  - rewrite plus_comm. reflexivity.
+Qed.
 (** [] *)
 
 
@@ -511,10 +569,6 @@ Proof.
     that this file can be graded on its own.  If you find yourself
     wanting to change your original definitions to make the property
     easier to prove, feel free to do so.) *)
-
-(* FILL IN HERE *)
-(** [] *)
-
 
 (** **** Exercise: 5 stars, advanced (binary_inverse)  *)
 (** This exercise is a continuation of the previous exercise about

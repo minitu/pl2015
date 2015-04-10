@@ -235,19 +235,25 @@ Proof. reflexivity.  Qed.
     its inputs are [false]. *)
 
 Definition nandb (b1:bool) (b2:bool) : bool :=
-  (* FILL IN HERE *) admit.
+  match b1 with
+  | true => match b2 with
+            | true => false
+            | false => true
+            end
+  | false => true
+  end.
 
 (** Remove "[Admitted.]" and fill in each proof with 
     "[Proof. reflexivity. Qed.]" *)
 
 Example test_nandb1:               (nandb true false) = true.
-(* FILL IN HERE *) Admitted.
+Proof. reflexivity. Qed.
 Example test_nandb2:               (nandb false false) = true.
-(* FILL IN HERE *) Admitted.
+Proof. reflexivity. Qed.
 Example test_nandb3:               (nandb false true) = true.
-(* FILL IN HERE *) Admitted.
+Proof. reflexivity. Qed.
 Example test_nandb4:               (nandb true true) = false.
-(* FILL IN HERE *) Admitted.
+Proof. reflexivity. Qed.
 (** [] *)
 
 (** **** Exercise: 1 star (andb3)  *)
@@ -857,11 +863,25 @@ Theorem identity_fn_applied_twice :
   (forall (x : bool), f x = x) ->
   forall (b : bool), f (f b) = b.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros.
+  rewrite H. rewrite H. reflexivity.
+Qed.
 
 (** Now state and prove a theorem [negation_fn_applied_twice] similar
     to the previous one but where the second hypothesis says that the
     function [f] has the property that [f x = negb x].*)
+
+Theorem negation_fn_applied_twice :
+  forall (f : bool -> bool),
+  (forall (x : bool), f x = negb x) ->
+  forall (b : bool), f (f b) = b.
+Proof.
+  intros.
+  rewrite H. rewrite H.
+  destruct b.
+  - reflexivity.
+  - reflexivity.
+Qed.
 
 (* FILL IN HERE *)
 (** [] *)
@@ -876,7 +896,15 @@ Theorem andb_eq_orb :
   (andb b c = orb b c) ->
   b = c.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros. destruct b.
+  - destruct c.
+    + reflexivity.
+    + simpl in H. inversion H.
+  - destruct c.
+    + simpl in H. inversion H.
+    + reflexivity.
+Qed.
+  
 (** [] *)
 
 (** **** Exercise: 3 stars (binary)  *)
@@ -915,7 +943,34 @@ Proof.
         then incrementing. 
 *)
 
-(* FILL IN HERE *)
+Inductive bin : Type :=
+  | bin_zero : bin
+  | bin_double : bin -> bin
+  | bin_double_plus_one : bin -> bin.
+
+Fixpoint incr (b : bin) : bin :=
+  match b with
+  | bin_zero => bin_double_plus_one bin_zero
+  | bin_double b' => bin_double_plus_one b'
+  | bin_double_plus_one b' => bin_double (incr b')
+  end.
+
+Fixpoint bin_to_nat (b : bin) : nat :=
+  match b with
+  | bin_zero => 0
+  | bin_double b' => 2 * (bin_to_nat b')
+  | bin_double_plus_one b' => 2 * (bin_to_nat b') + 1
+  end.
+
+Example test_bin_incr1 : bin_to_nat (incr bin_zero) = 1.
+Proof. reflexivity. Qed.
+
+Example test_bin_incr2: bin_to_nat (incr (bin_double_plus_one bin_zero)) = 2.
+Proof. reflexivity. Qed.
+
+Example test_bin_incr3: bin_to_nat (incr (bin_double (bin_double_plus_one bin_zero))) = 3.
+Proof. reflexivity. Qed.
+
 (** [] *)
 
 (* ###################################################################### *)

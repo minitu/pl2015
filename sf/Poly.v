@@ -664,7 +664,9 @@ Definition prod_curry {X Y Z : Type}
 
 Definition prod_uncurry {X Y Z : Type}
   (f : X -> Y -> Z) (p : X * Y) : Z :=
-  (* FILL IN HERE *) admit.
+  match p with
+  | (a, b) => f a b
+  end.
 
 (** (Thought exercise: before running these commands, can you
     calculate the types of [prod_curry] and [prod_uncurry]?) *)
@@ -675,13 +677,18 @@ Check @prod_uncurry.
 Theorem uncurry_curry : forall (X Y Z : Type) (f : X -> Y -> Z) x y,
   prod_curry (prod_uncurry f) x y = f x y.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros.
+  reflexivity.
+Qed.
 
 Theorem curry_uncurry : forall (X Y Z : Type)
                                (f : (X * Y) -> Z) (p : X * Y),
   prod_uncurry (prod_curry f) p = f p.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros.
+  destruct p.
+  reflexivity.
+Qed.
 (** [] *)
 
 (* ###################################################### *)
@@ -1123,13 +1130,19 @@ Qed.
     below. *)
 
 Definition fold_map {X Y:Type} (f : X -> Y) (l : list X) : list Y :=
-  admit.
+  fold (fun x r => (f x) :: r) l [].
 
 
 (** Write down a theorem [fold_map_correct] in Coq stating that
    [fold_map] is correct, and prove it. *)
-
-(* FILL IN HERE *)
+Theorem fold_map_correct : forall {X Y:Type} (f : X -> Y) (l : list X),
+  fold_map f l = map f l.
+Proof.
+  intros. induction l.
+  - reflexivity.
+  - unfold fold_map. simpl. unfold fold_map in IHl. rewrite -> IHl. reflexivity.
+Qed.
+  
 (** [] *)
 
 (** **** Exercise: 2 stars, advanced (index_informal)  *)
@@ -1188,16 +1201,16 @@ Definition three : nat := @doit3times.
 (** Successor of a natural number *)
 
 Definition succ (n : nat) : nat :=
-  (* FILL IN HERE *) admit.
+  fun (X : Type) (f : X -> X) (x : X) => f (n X f x).
 
 Example succ_1 : succ zero = one.
-Proof. (* FILL IN HERE *) Admitted.
+Proof. reflexivity. Qed.
 
 Example succ_2 : succ one = two.
-Proof. (* FILL IN HERE *) Admitted.
+Proof. reflexivity. Qed.
 
 Example succ_3 : succ two = three.
-Proof. (* FILL IN HERE *) Admitted.
+Proof. reflexivity. Qed.
 
 (** Addition of two natural numbers *)
 
