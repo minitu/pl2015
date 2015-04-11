@@ -7,7 +7,20 @@ Require Export Assignment05_04.
 Theorem or_distributes_over_and : forall P Q R : Prop,
   P \/ (Q /\ R) <-> (P \/ Q) /\ (P \/ R).
 Proof.
-  (* FILL IN HERE *) admit.
+  intros.
+  split.
+  - intros. split.
+    + destruct H.
+      * left. apply H.
+      * destruct H. right. apply H.
+    + destruct H.
+      * left. apply H.
+      * destruct H. right. apply H0.
+  - intros. inversion H. inversion H0.
+    + left. apply H2.
+    + inversion H1.
+      * left. apply H3.
+      * right. split. apply H2. apply H3.
 Qed.
 (** [] *)
 

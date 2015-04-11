@@ -31,7 +31,6 @@ Inductive ev : nat -> Prop :=
   | ev_0 : ev O
   | ev_SS : forall n:nat, ev n -> ev (S (S n)).
 
-
 (** The first line declares that [ev] is a proposition -- or,
     more formally, a family of propositions "indexed by" natural
     numbers.  (That is, for each number [n], the claim that "[n] is
@@ -45,13 +44,15 @@ Inductive ev : nat -> Prop :=
     e] is the evidence.
 *)
 
-
 (** **** Exercise: 1 star (double_even)  *)
 
 Theorem double_even : forall n,
   ev (double n).
 Proof.
-  (* FILL IN HERE *) Admitted.
+  induction n.
+  - simpl. apply ev_0.
+  - simpl. apply ev_SS. apply IHn.
+Qed.
 (** [] *)
 
 
@@ -193,13 +194,24 @@ Qed.
 (** **** Exercise: 2 stars (b_times2)  *)
 Theorem b_times2: forall n, beautiful n -> beautiful (2*n).
 Proof.
-    (* FILL IN HERE *) Admitted.
+  intros.
+  simpl. apply b_sum with (n:=n) (m:=(n+0)).
+  - apply H.
+  - apply b_sum with (n:=n) (m:=0).
+    + apply H.
+    + apply b_0.
+Qed.
 (** [] *)
 
 (** **** Exercise: 3 stars (b_timesm)  *)
 Theorem b_timesm: forall n m, beautiful n -> beautiful (m*n).
 Proof.
-   (* FILL IN HERE *) Admitted.
+  induction m.
+  - intros. simpl. apply b_0.
+  - intros. simpl. apply b_sum with (m:=m * n).
+    + apply H.
+    + apply IHm. apply H.
+Qed.
 (** [] *)
 
 
@@ -253,7 +265,9 @@ Inductive gorgeous : nat -> Prop :=
 Theorem gorgeous_plus13: forall n, 
   gorgeous n -> gorgeous (13+n).
 Proof.
-   (* FILL IN HERE *) Admitted.
+  intros.
+  apply g_plus5. apply g_plus5. apply g_plus3. apply H.
+Qed.
 (** [] *)
 
 (** *** *)
@@ -306,13 +320,25 @@ Qed.
 Theorem gorgeous_sum : forall n m,
   gorgeous n -> gorgeous m -> gorgeous (n + m).
 Proof.
- (* FILL IN HERE *) Admitted.
+  intros n m gn. induction gn.
+  - intros. simpl. apply H.
+  - intros. simpl. apply g_plus3. apply IHgn. apply H.
+  - intros. simpl. apply g_plus5. apply IHgn. apply H.
+Qed.
 (** [] *)
 
 (** **** Exercise: 3 stars, advanced (beautiful__gorgeous)  *)
 Theorem beautiful__gorgeous : forall n, beautiful n -> gorgeous n.
 Proof.
- (* FILL IN HERE *) Admitted.
+  intros.
+  induction H.
+  - apply g_0.
+  - apply g_plus3. apply g_0.
+  - apply g_plus5. apply g_0.
+  - apply gorgeous_sum.
+    + apply IHbeautiful1.
+    + apply IHbeautiful2.
+Qed.
 (** [] *)
 
 
@@ -324,13 +350,22 @@ Proof.
 
 Lemma helper_g_times2 : forall x y z, x + (z + y) = z + x + y.
 Proof.
-   (* FILL IN HERE *) Admitted.
+  intros.
+  rewrite plus_comm. rewrite <- plus_assoc with (n:=z) (m:=y) (p:=x).
+  rewrite <- plus_assoc with (n:=z) (m:=x) (p:=y). rewrite plus_comm with (n:=y) (m:=x).
+  reflexivity.
+Qed.
 
 Theorem g_times2: forall n, gorgeous n -> gorgeous (2*n).
 Proof.
    intros n H. simpl. 
    induction H.
-   (* FILL IN HERE *) Admitted.
+   - simpl. apply g_0.
+   - rewrite plus_0_r. rewrite plus_0_r in IHgorgeous. rewrite helper_g_times2.
+     simpl. apply g_plus3. apply g_plus3. apply IHgorgeous.
+   - rewrite plus_0_r. rewrite plus_0_r in IHgorgeous. rewrite helper_g_times2.
+     simpl. apply g_plus5. apply g_plus5. apply IHgorgeous.
+Qed.
 (** [] *)
 
 
@@ -351,7 +386,13 @@ Qed.
 (** **** Exercise: 1 star (ev__even)  *) 
 (** Could this proof also be carried out by induction on [n] instead
     of [E]?  If not, why not? *)
-
+Theorem ev__even_FAIL : forall n,
+  ev n -> even n.
+Proof.
+  intros n E. induction n.
+  - unfold even. reflexivity.
+  - unfold even.
+Abort.
 (* FILL IN HERE *)
 (** [] *)
 
@@ -381,7 +422,11 @@ Qed.
 Theorem ev_sum : forall n m,
    ev n -> ev m -> ev (n+m).
 Proof. 
-  (* FILL IN HERE *) Admitted.
+  intros.
+  induction H.
+  - simpl. apply H0.
+  - simpl. apply ev_SS. apply IHev.
+Qed.
 (** [] *)
 
 
@@ -460,7 +505,11 @@ Proof.
 Theorem SSSSev__even : forall n,
   ev (S (S (S (S n)))) -> ev n.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros.
+  inversion H.
+  inversion H1.
+  apply H3.
+Qed.
 
 (** The [inversion] tactic can also be used to derive goals by showing
     the absurdity of a hypothesis. *)
@@ -468,7 +517,9 @@ Proof.
 Theorem even5_nonsense : 
   ev 5 -> 2 + 2 = 9.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros.
+  inversion H. inversion H1. inversion H3.
+Qed.
 (** [] *)
 
 (** **** Exercise: 3 stars, advanced (ev_ev__ev)  *)
@@ -478,7 +529,10 @@ Proof.
 Theorem ev_ev__ev : forall n m,
   ev (n+m) -> ev n -> ev m.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros. induction H0.
+  - simpl in H. apply H.
+  - apply IHev. inversion H. apply H2.
+Qed.
 (** [] *)
 
 (** **** Exercise: 3 stars, optional (ev_plus_plus)  *)
@@ -489,7 +543,7 @@ Proof.
 Theorem ev_plus_plus : forall n m p,
   ev (n+m) -> ev (n+p) -> ev (m+p).
 Proof.
-  (* FILL IN HERE *) Admitted.
+  Admitted.
 (** [] *)
 
 
