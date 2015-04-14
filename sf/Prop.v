@@ -543,7 +543,15 @@ Qed.
 Theorem ev_plus_plus : forall n m p,
   ev (n+m) -> ev (n+p) -> ev (m+p).
 Proof.
-  Admitted.
+  intros. apply ev_sum with (n:=n+m) (m:=n+p) in H. 
+  replace (n+m+(n+p)) with (n+n+(m+p)) in H.
+  rewrite <- double_plus in H. apply ev_ev__ev with (n:=double n) (m:=m+p).
+  apply H. apply double_even.
+  rewrite plus_assoc. rewrite plus_assoc. rewrite <- plus_assoc with (n:=n) (m:=n) (p:=m).
+  rewrite <- plus_assoc with (n:=n) (m:=m) (p:=n). rewrite plus_comm with (n:=n) (m:=m).
+  reflexivity.
+  apply H0.
+Qed.
 (** [] *)
 
 
@@ -638,8 +646,27 @@ Qed.
        forall l, pal l -> l = rev l.
 *)
 
-(* FILL IN HERE *)
+Inductive pal {X : Type} : list X -> Prop :=
+| pal_nil : pal []
+| pal_one : forall x : X, pal (cons x [])
+| pal_two : forall (x : X) (l : list X), pal l -> pal (snoc (cons x l) x).
 (** [] *)
+
+Theorem pal_app_rev : forall {X : Type} (l : list X),
+  pal (l ++ rev l).
+Proof.
+  intros. induction l.
+  - simpl. apply pal_nil.
+  - simpl. rewrite <- snoc_with_append. apply pal_two. apply IHl.
+Qed.
+
+Theorem pal_rev : forall {X : Type} (l : list X),
+  pal l -> l = rev l.
+  intros. induction H.
+  - reflexivity.
+  - reflexivity.
+  - simpl. rewrite rev_snoc. simpl. rewrite <- IHpal. reflexivity.
+Qed.
 
 (* Again, the converse direction is much more difficult, due to the
 lack of evidence. *)
@@ -650,7 +677,14 @@ lack of evidence. *)
      forall l, l = rev l -> pal l.
 *)
 
-(* FILL IN HERE *)
+Theorem rev_pal : forall {X : Type} (l : list X),
+  l = rev l -> pal l.
+  intros. induction l.
+  - apply pal_nil.
+  - destruct l.
+    + apply pal_one.
+    + admit.
+Qed.
 (** [] *)
 
 
@@ -743,14 +777,16 @@ Inductive next_even : nat -> nat -> Prop :=
 (** Define an inductive binary relation [total_relation] that holds
     between every pair of natural numbers. *)
 
-(* FILL IN HERE *)
+Inductive total_relation : nat -> nat -> Prop :=
+  tt : forall (n m : nat), total_relation n m.
 (** [] *)
 
 (** **** Exercise: 2 stars (empty_relation)  *)
 (** Define an inductive binary relation [empty_relation] (on numbers)
     that never holds. *)
 
-(* FILL IN HERE *)
+Inductive empty_relation : nat -> nat -> Prop := .
+
 (** [] *)
 
 (** **** Exercise: 2 stars, optional (le_exercises)  *)
@@ -760,66 +796,107 @@ Inductive next_even : nat -> nat -> Prop :=
 
 Lemma le_trans : forall m n o, m <= n -> n <= o -> m <= o.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros.
+  induction H0.
+  - apply H.
+  - apply le_S. apply IHle.
+Qed.
 
 Theorem O_le_n : forall n,
   0 <= n.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros. induction n.
+  - apply le_n.
+  - apply le_S. apply IHn.
+Qed.
 
 Theorem n_le_m__Sn_le_Sm : forall n m,
   n <= m -> S n <= S m.
-Proof. 
-  (* FILL IN HERE *) Admitted.
-
+Proof.
+  intros. induction H.
+  - apply le_n.
+  - apply le_S. apply IHle.
+Qed.
 
 Theorem Sn_le_Sm__n_le_m : forall n m,
   S n <= S m -> n <= m.
 Proof. 
-  (* FILL IN HERE *) Admitted.
-
+  intros. generalize dependent n. induction m.
+  - intros. inversion H.
+    + apply le_n.
+    + inversion H1.
+  - intros. inversion H.
+    + apply le_n.
+    + apply le_S. apply IHm in H1. apply H1.
+Qed.
 
 Theorem le_plus_l : forall a b,
   a <= a + b.
 Proof. 
-  (* FILL IN HERE *) Admitted.
+  intros. induction b.
+  - rewrite plus_comm. simpl. apply le_n.
+  - rewrite plus_comm. simpl. apply le_S. rewrite plus_comm. apply IHb.
+Qed.
 
 Theorem plus_lt : forall n1 n2 m,
   n1 + n2 < m ->
   n1 < m /\ n2 < m.
 Proof. 
- unfold lt. 
- (* FILL IN HERE *) Admitted.
+  unfold lt. intros. induction H.
+  - split.
+    + rewrite <- plus_Sn_m. apply le_plus_l.
+    + rewrite plus_n_Sm. rewrite plus_comm. apply le_plus_l.
+  - inversion IHle. split.
+    + apply le_S. apply H0.
+    + apply le_S. apply H1.
+Qed.
 
 Theorem lt_S : forall n m,
   n < m ->
   n < S m.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  unfold lt.
+  intros. apply le_S. apply H.
+Qed.
 
 Theorem ble_nat_true : forall n m,
   ble_nat n m = true -> n <= m.
 Proof. 
-  (* FILL IN HERE *) Admitted.
+  induction n.
+  - intros. apply O_le_n.
+  - intros. destruct m.
+    + inversion H.
+    + simpl in H. apply n_le_m__Sn_le_Sm. apply IHn. apply H.
+Qed.
 
 Theorem le_ble_nat : forall n m,
   n <= m ->
   ble_nat n m = true.
 Proof.
   (* Hint: This may be easiest to prove by induction on [m]. *)
-  (* FILL IN HERE *) Admitted.
+  intros. generalize dependent n. induction m.
+  - intros. inversion H. simpl. reflexivity.
+  - intros. destruct n.
+    + simpl. reflexivity.
+    + simpl. apply IHm. apply Sn_le_Sm__n_le_m. apply H.
+Qed.
 
 Theorem ble_nat_true_trans : forall n m o,
   ble_nat n m = true -> ble_nat m o = true -> ble_nat n o = true.                               
 Proof.
   (* Hint: This theorem can be easily proved without using [induction]. *)
-  (* FILL IN HERE *) Admitted.
+  intros. apply ble_nat_true in H. apply ble_nat_true in H0. apply le_ble_nat.
+  apply le_trans with (m:=n) (n:=m) (o:=o).
+  - apply H.
+  - apply H0.
+Qed.
 
 (** **** Exercise: 2 stars, optional (ble_nat_false)  *)
 Theorem ble_nat_false : forall n m,
   ble_nat n m = false -> ~(n <= m).
 Proof.
-  (* FILL IN HERE *) Admitted.
+  unfold not. intros. apply le_ble_nat in H0. rewrite H0 in H. inversion H.
+Qed.
 (** [] *)
 
 
@@ -1110,5 +1187,3 @@ Proof. reflexivity.  Qed.
 (** [] *)
 
 (** $Date: 2014-12-31 11:17:56 -0500 (Wed, 31 Dec 2014) $ *)
-
-
