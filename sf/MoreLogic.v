@@ -110,7 +110,10 @@ Qed.
 Theorem dist_not_exists : forall (X:Type) (P : X -> Prop),
   (forall x, P x) -> ~ (exists x, ~ P x).
 Proof. 
-  (* FILL IN HERE *) Admitted.
+  unfold not.
+  intros. inversion H0 as [x Hx].
+  apply Hx. apply H.
+Qed.
 (** [] *)
 
 (** **** Exercise: 3 stars, optional (not_exists_dist)  *)
@@ -122,7 +125,15 @@ Theorem not_exists_dist :
   forall (X:Type) (P : X -> Prop),
     ~ (exists x, ~ P x) -> (forall x, P x).
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros.
+  unfold excluded_middle in H.
+  assert (HPx : (P x) \/ ~ (P x)).
+  apply H.
+  inversion HPx.
+  - apply H1.
+  - apply ex_falso_quodlibet. unfold not in H0. apply H0. unfold not in H1. exists x. apply H1.
+Qed.  
+
 (** [] *)
 
 (** **** Exercise: 2 stars (dist_exists_or)  *)
@@ -132,7 +143,16 @@ Proof.
 Theorem dist_exists_or : forall (X:Type) (P Q : X -> Prop),
   (exists x, P x \/ Q x) <-> (exists x, P x) \/ (exists x, Q x).
 Proof.
-   (* FILL IN HERE *) Admitted.
+  intros.
+  split.
+  - intros. inversion H as [x Hx].
+    inversion Hx.
+    + left. exists x. apply H0.
+    + right. exists x. apply H0.
+  - intros. inversion H.
+    + inversion H0 as [x Hx]. exists x. left. apply Hx.
+    + inversion H0 as [x Hx]. exists x. right. apply Hx.
+Qed.
 (** [] *)
 
 (* ###################################################### *)
@@ -235,7 +255,10 @@ Proof.
 Theorem override_shadow' : forall (X:Type) x1 x2 k1 k2 (f : nat->X),
   (override' (override' f k1 x2) k1 x1) k2 = (override' f k1 x1) k2.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros. unfold override'. destruct (eq_nat_dec k1 k2).
+  - reflexivity.
+  - reflexivity.
+Qed.
 (** [] *)
 
 
@@ -251,7 +274,8 @@ Proof.
     asserts that [P] is true for every element of the list [l]. *)
 
 Inductive all (X : Type) (P : X -> Prop) : list X -> Prop :=
-  (* FILL IN HERE *)
+  | all_nil : all X P []
+  | all_add : forall (x : X) (l : list X), (P x) /\ (all X P l) -> all X P (cons x l)
 .
 
 (** Recall the function [forallb], from the exercise
@@ -270,7 +294,19 @@ Fixpoint forallb {X : Type} (test : X -> bool) (l : list X) : bool :=
     Are there any important properties of the function [forallb] which
     are not captured by your specification? *)
 
-(* FILL IN HERE *)
+Theorem forallb_correctness : forall (X : Type) (test : X -> bool) (l : list X),
+  (all X (fun x => if test x then True else False) l) <-> (forallb test l = true).
+Proof.
+  intros. split.
+  - intros. induction l. 
+    + simpl. reflexivity.
+    + simpl. destruct (test x).
+      destruct (forallb test l).
+      reflexivity.
+      simpl. apply IHl. inversion H. inversion H1. apply H4.
+      destruct (forallb test l).
+      simpl.
+Abort.
 (** [] *)
 
 (** **** Exercise: 4 stars, advanced (filter_challenge)  *)
