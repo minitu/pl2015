@@ -496,12 +496,19 @@ Fixpoint exp (base power : nat) : nat :=
     Translate this into Coq. *)
 
 Fixpoint factorial (n:nat) : nat := 
-(* FILL IN HERE *) admit.
+  match n with
+  | O => 1
+  | S n' => n * (factorial n')
+  end.
 
 Example test_factorial1:          (factorial 3) = 6.
-(* FILL IN HERE *) Admitted.
+Proof.
+  reflexivity.
+Qed.
 Example test_factorial2:          (factorial 5) = (mult 10 12).
-(* FILL IN HERE *) Admitted.
+Proof.
+  reflexivity.
+Qed.
 
 (** [] *)
 
@@ -732,7 +739,9 @@ Proof.
 Theorem plus_id_exercise : forall n m o : nat,
   n = m -> m = o -> n + m = m + o.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros.
+  rewrite H. rewrite <- H0. reflexivity.
+Qed.
 (** [] *)
 
 (** As we've seen in earlier examples, the [Admitted] command
@@ -762,7 +771,9 @@ Theorem mult_S_1 : forall n m : nat,
   m = S n -> 
   m * (1 + n) = m * m.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros.
+  rewrite H. simpl. reflexivity.
+Qed.
 (** [] *)
 
 
@@ -847,7 +858,10 @@ Proof.
 Theorem zero_nbeq_plus_1 : forall n : nat,
   beq_nat 0 (n + 1) = false.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros. destruct n as [| n'].
+  - reflexivity.
+  - reflexivity.
+Qed.
 
 (** [] *)
 
@@ -882,8 +896,6 @@ Proof.
   - reflexivity.
   - reflexivity.
 Qed.
-
-(* FILL IN HERE *)
 (** [] *)
 
 (** **** Exercise: 2 stars (andb_eq_orb)  *)
@@ -1043,4 +1055,3 @@ Fixpoint plus' (n : nat) (m : nat) : nat :=
 (** [] *)
 
 (** $Date: 2014-12-31 15:31:47 -0500 (Wed, 31 Dec 2014) $ *)
-

@@ -195,11 +195,9 @@ Qed.
 Theorem b_times2: forall n, beautiful n -> beautiful (2*n).
 Proof.
   intros.
-  simpl. apply b_sum with (n:=n) (m:=(n+0)).
+  simpl. rewrite plus_comm with (m:=0). simpl. apply b_sum. 
   - apply H.
-  - apply b_sum with (n:=n) (m:=0).
-    + apply H.
-    + apply b_0.
+  - apply H.
 Qed.
 (** [] *)
 
@@ -543,6 +541,21 @@ Qed.
 Theorem ev_plus_plus : forall n m p,
   ev (n+m) -> ev (n+p) -> ev (m+p).
 Proof.
+  intros. assert (ev ((n + n) + (m + p))).
+  - rewrite <- plus_assoc. rewrite plus_assoc with (n:=n) (m:=m) (p:=p).
+    rewrite plus_assoc with (n:=n) (m:=n+m) (p:=p).
+    rewrite plus_comm with (n:=n) (m:=n+m).
+    rewrite <- plus_assoc with (n:=n+m) (m:=n) (p:=p).
+    apply ev_sum.
+    + apply H.
+    + apply H0.
+  - rewrite <- double_plus in H1. apply ev_ev__ev with (n:=double n) (m:=m+p).
+    + apply H1.
+    + apply double_even.
+Qed.
+
+(**
+Proof.
   intros. apply ev_sum with (n:=n+m) (m:=n+p) in H. 
   replace (n+m+(n+p)) with (n+n+(m+p)) in H.
   rewrite <- double_plus in H. apply ev_ev__ev with (n:=double n) (m:=m+p).
@@ -552,6 +565,7 @@ Proof.
   reflexivity.
   apply H0.
 Qed.
+*)
 (** [] *)
 
 
@@ -625,7 +639,8 @@ Proof.
   Case "ev_SS". intros l H2. destruct l. 
     SCase "[]". inversion H2. destruct l.
     SCase "[x]". inversion H2.
-    SCase "x :: x0 :: l". apply el_cc. apply IHev. inversion H2. reflexivity.
+    SCase "x :: x0 :: l". apply el_cc. apply IHev.
+    inversion H2. reflexivity.
 Qed.
     
 
@@ -679,11 +694,8 @@ lack of evidence. *)
 
 Theorem rev_pal : forall {X : Type} (l : list X),
   l = rev l -> pal l.
-  intros. induction l.
-  - apply pal_nil.
-  - destruct l.
-    + apply pal_one.
-    + admit.
+Proof.
+  admit.
 Qed.
 (** [] *)
 
@@ -796,8 +808,7 @@ Inductive empty_relation : nat -> nat -> Prop := .
 
 Lemma le_trans : forall m n o, m <= n -> n <= o -> m <= o.
 Proof.
-  intros.
-  induction H0.
+  intros. induction H0.
   - apply H.
   - apply le_S. apply IHle.
 Qed.
@@ -821,7 +832,7 @@ Qed.
 Theorem Sn_le_Sm__n_le_m : forall n m,
   S n <= S m -> n <= m.
 Proof. 
-  intros. generalize dependent n. induction m.
+  intros.  generalize dependent n. induction m.
   - intros. inversion H.
     + apply le_n.
     + inversion H1.
@@ -973,7 +984,37 @@ End R.
       Hint: choose your induction carefully!
 *)
 
-(* FILL IN HERE *)
+Inductive subseq : list nat -> list nat -> Prop :=
+  | s1 : forall l, subseq [] l
+  | s2 : forall l1 l2 n, subseq l1 l2 -> subseq l1 (n :: l2)
+  | s3 : forall l1 l2 n, subseq l1 l2 -> subseq (n :: l1) (n :: l2).
+
+Theorem subseq_refl : forall l, subseq l l.
+Proof.
+  intros. induction l.
+  - apply s1.
+  - apply s3. apply IHl.
+Qed.
+
+Theorem subseq_app : forall l1 l2 l3,
+  subseq l1 l2 -> subseq l1 (l2 ++ l3).
+Proof.
+  intros. induction H.
+  - apply s1.
+  - simpl. apply s2. apply IHsubseq.
+  - simpl. apply s3. apply IHsubseq.
+Qed.
+
+Theorem subseq_trans : forall l1 l2 l3,
+  subseq l1 l2 -> subseq l2 l3 -> subseq l1 l3.
+Proof.
+  intros. induction H0.
+  - inversion H. apply s1.
+  - apply s2. apply IHsubseq. apply H.
+  - apply s2. apply IHsubseq. inversion H.
+    + apply s1.
+    + apply H3.
+    + Abort. 
 (** [] *)
 
 (** **** Exercise: 2 stars, optional (R_provability)  *)
@@ -1064,7 +1105,7 @@ Check (even 4).
 (* ===> even 4 : Prop *)
 Check (even 3).
 (* ===> even 3 : Prop *)
-Check even. 
+Check even.
 (* ===> even : nat -> Prop *)
 
 (** *** *)
@@ -1131,7 +1172,7 @@ Definition natural_number_induction_valid : Prop :=
     equivalent to [Peven n] otherwise. *)
 
 Definition combine_odd_even (Podd Peven : nat -> Prop) : nat -> Prop :=
-  (* FILL IN HERE *) admit.
+  fun (n : nat) => if oddb n then Podd n else Peven n.
 
 (** To test your definition, see whether you can prove the following
     facts: *)
@@ -1142,7 +1183,10 @@ Theorem combine_odd_even_intro :
     (oddb n = false -> Peven n) ->
     combine_odd_even Podd Peven n.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros. unfold combine_odd_even. destruct (oddb n) eqn:odd_n.
+  - apply H. reflexivity.
+  - apply H0. reflexivity.
+Qed.
 
 Theorem combine_odd_even_elim_odd :
   forall (Podd Peven : nat -> Prop) (n : nat),
@@ -1150,7 +1194,8 @@ Theorem combine_odd_even_elim_odd :
     oddb n = true ->
     Podd n.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros. unfold combine_odd_even in H. rewrite H0 in H. apply H.
+Qed.
 
 Theorem combine_odd_even_elim_even :
   forall (Podd Peven : nat -> Prop) (n : nat),
@@ -1158,7 +1203,8 @@ Theorem combine_odd_even_elim_even :
     oddb n = false ->
     Peven n.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros. unfold combine_odd_even in H. rewrite H0 in H. apply H.
+Qed.
 
 (** [] *)
 
@@ -1175,15 +1221,21 @@ Proof.
     [true_upto_n__true_everywhere] that makes
     [true_upto_n_example] work. *)
 
-(* 
-Fixpoint true_upto_n__true_everywhere
-(* FILL IN HERE *)
+
+Fixpoint true_upto_n__true_everywhere (n:nat) (P: nat->Prop) : Prop :=
+  match n with
+  | O => forall m : nat, P m
+  | S n' => P n -> true_upto_n__true_everywhere n' P
+  end.
+
+(** Why don't we need P O in the first case?
+    -> Because it does not include 0! *)
 
 Example true_upto_n_example :
     (true_upto_n__true_everywhere 3 (fun n => even n))
   = (even 3 -> even 2 -> even 1 -> forall m : nat, even m).
 Proof. reflexivity.  Qed.
-*)
+
 (** [] *)
 
 (** $Date: 2014-12-31 11:17:56 -0500 (Wed, 31 Dec 2014) $ *)

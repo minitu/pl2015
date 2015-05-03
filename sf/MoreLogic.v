@@ -125,15 +125,11 @@ Theorem not_exists_dist :
   forall (X:Type) (P : X -> Prop),
     ~ (exists x, ~ P x) -> (forall x, P x).
 Proof.
-  intros.
-  unfold excluded_middle in H.
-  assert (HPx : (P x) \/ ~ (P x)).
-  apply H.
-  inversion HPx.
+  intros. unfold excluded_middle in H. unfold not in *.
+  specialize H with (P x). inversion H.
   - apply H1.
-  - apply ex_falso_quodlibet. unfold not in H0. apply H0. unfold not in H1. exists x. apply H1.
-Qed.  
-
+  - apply ex_falso_quodlibet. apply H0. exists x. apply H1.
+Qed.
 (** [] *)
 
 (** **** Exercise: 2 stars (dist_exists_or)  *)
@@ -275,7 +271,7 @@ Qed.
 
 Inductive all (X : Type) (P : X -> Prop) : list X -> Prop :=
   | all_nil : all X P []
-  | all_add : forall (x : X) (l : list X), (P x) /\ (all X P l) -> all X P (cons x l)
+  | all_add : forall (x : X) (l : list X), (P x) -> (all X P l) -> all X P (cons x l)
 .
 
 (** Recall the function [forallb], from the exercise
@@ -295,18 +291,18 @@ Fixpoint forallb {X : Type} (test : X -> bool) (l : list X) : bool :=
     are not captured by your specification? *)
 
 Theorem forallb_correctness : forall (X : Type) (test : X -> bool) (l : list X),
-  (all X (fun x => if test x then True else False) l) <-> (forallb test l = true).
+  (all X (fun x => (test x = true)) l) <-> (forallb test l = true).
 Proof.
-  intros. split.
-  - intros. induction l. 
-    + simpl. reflexivity.
-    + simpl. destruct (test x).
-      destruct (forallb test l).
-      reflexivity.
-      simpl. apply IHl. inversion H. inversion H1. apply H4.
-      destruct (forallb test l).
-      simpl.
-Abort.
+  split.
+  - intros. induction H.
+    + reflexivity.
+    + simpl. rewrite H. rewrite IHall. reflexivity.
+  - intros. induction l.
+    + apply all_nil.
+    + apply all_add.
+      * inversion H. rewrite H1. apply andb_true_elim1 in H1. apply H1.
+      * apply IHl. inversion H. rewrite H1. apply andb_true_elim2 in H1. apply H1.
+Qed.
 (** [] *)
 
 (** **** Exercise: 4 stars, advanced (filter_challenge)  *)
@@ -334,7 +330,6 @@ Abort.
     for one list to be a merge of two others.  Do this with an
     inductive relation, not a [Fixpoint].)  *)
 
-(* FILL IN HERE *)
 (** [] *)
 
 (** **** Exercise: 5 stars, advanced, optional (filter_challenge_2)  *)
@@ -343,7 +338,6 @@ Abort.
     that [test] evaluates to [true] on all their members, [filter test
     l] is the longest.  Express this claim formally and prove it. *)
 
-(* FILL IN HERE *)
 (** [] *)
 
 (** **** Exercise: 4 stars, advanced (no_repeats)  *)
@@ -362,19 +356,37 @@ Inductive appears_in {X:Type} (a:X) : list X -> Prop :=
 Lemma appears_in_app : forall (X:Type) (xs ys : list X) (x:X), 
      appears_in x (xs ++ ys) -> appears_in x xs \/ appears_in x ys.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  induction xs.
+  - intros. simpl in H. right. apply H.
+  - intros. simpl in H. inversion H.
+    + left. apply ai_here.
+    + apply IHxs in H1. inversion H1.
+      * left. apply ai_later. apply H3.
+      * right. apply H3.
+Qed.
 
 Lemma app_appears_in : forall (X:Type) (xs ys : list X) (x:X), 
      appears_in x xs \/ appears_in x ys -> appears_in x (xs ++ ys).
 Proof.
-  (* FILL IN HERE *) Admitted.
-
+  induction xs.
+  - intros. simpl. inversion H.
+    + inversion H0.
+    + apply H0.
+  - intros. simpl. inversion H.
+    + inversion H0.
+      * apply ai_here.
+      * apply ai_later. apply IHxs. left. apply H2.
+    + apply ai_later. apply IHxs. right. apply H0.
+Qed.
 
 (** Now use [appears_in] to define a proposition [disjoint X l1 l2],
     which should be provable exactly when [l1] and [l2] are
     lists (with elements of type X) that have no elements in common. *)
 
-(* FILL IN HERE *)
+Inductive disjoint (X:Type) : list X -> list X -> Prop :=
+  | dj_nil : disjoint X [] []
+  | dj_l1 : forall l1 l2 x, (appears_in x l1 /\ ~ appears_in x l2) -> disjoint X l1 l2
+  | dj_l2 : forall l1 l2 x, (appears_in x l2 /\ ~ appears_in x l1) -> disjoint X l1 l2.
 
 (** Next, use [appears_in] to define an inductive proposition
     [no_repeats X l], which should be provable exactly when [l] is a
@@ -383,12 +395,21 @@ Proof.
     [no_repeats bool []] should be provable, while [no_repeats nat
     [1,2,1]] and [no_repeats bool [true,true]] should not be.  *)
 
-(* FILL IN HERE *)
+Inductive no_repeats (X:Type) : list X -> Prop :=
+  | nr_nil : no_repeats X []
+  | nr_add : forall l x, (no_repeats X l /\ ~ appears_in x l) -> no_repeats X (x :: l).
 
 (** Finally, state and prove one or more interesting theorems relating
     [disjoint], [no_repeats] and [++] (list append).  *)
 
-(* FILL IN HERE *)
+Theorem dis_nr : forall X l1 l2,
+  disjoint X l1 l2 /\ no_repeats X l1 /\ no_repeats X l2 -> no_repeats X (l1 ++ l2).
+Proof.
+  intros. destruct H as [dj [nr1 nr2]].
+  generalize dependent l2. induction l1.
+  - intros. simpl. apply nr2.
+  - intros. simpl. inversion nr1. clear H x0 l H1. destruct H0.
+Abort.
 (** [] *)
 
 (** **** Exercise: 3 stars (nostutter)  *)
@@ -404,7 +425,9 @@ Proof.
     does not stutter.) *)
 
 Inductive nostutter:  list nat -> Prop :=
- (* FILL IN HERE *)
+  | nos1 : nostutter []
+  | nos2 : forall x, nostutter [x]
+  | nos3 : forall x h t, nostutter (h :: t) -> (h <> x) -> nostutter (x :: (h :: t))
 .
 
 (** Make sure each of these tests succeeds, but you are free
@@ -420,32 +443,23 @@ Inductive nostutter:  list nat -> Prop :=
     tactics.  *)
 
 Example test_nostutter_1:      nostutter [3;1;4;1;5;6].
-(* FILL IN HERE *) Admitted.
-(* 
+
   Proof. repeat constructor; apply beq_nat_false; auto. Qed.
-*)
 
 Example test_nostutter_2:  nostutter [].
-(* FILL IN HERE *) Admitted.
-(* 
+
   Proof. repeat constructor; apply beq_nat_false; auto. Qed.
-*)
 
 Example test_nostutter_3:  nostutter [5].
-(* FILL IN HERE *) Admitted.
-(* 
+
   Proof. repeat constructor; apply beq_nat_false; auto. Qed.
-*)
 
 Example test_nostutter_4:      not (nostutter [3;1;1;4]).
-(* FILL IN HERE *) Admitted.
-(* 
+
   Proof. intro.
   repeat match goal with 
     h: nostutter _ |- _ => inversion h; clear h; subst 
-  end.
-  contradiction H1; auto. Qed.
-*)
+  end. unfold not in H5. apply H5. reflexivity. Qed.
 (** [] *)
 
 (** **** Exercise: 4 stars, advanced (pigeonhole principle)  *)

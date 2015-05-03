@@ -216,7 +216,7 @@ Theorem minus_diag : forall n,
   minus n n = 0.
 Proof.
   (* WORKED IN CLASS *)
-  intros n. induction n as [| n'].
+  intros n.  induction n as [| n'].
   Case "n = 0".
     simpl. reflexivity.
   Case "n = S n'".
@@ -420,9 +420,7 @@ Proof.
   intros.
   induction n.
   - reflexivity.
-  - simpl. rewrite IHn. rewrite negb_involutive. destruct n.
-    + reflexivity.
-    + reflexivity.
+  - simpl. rewrite IHn. rewrite negb_involutive. reflexivity.
 Qed.
 (** [] *)
 
@@ -570,6 +568,55 @@ Qed.
     wanting to change your original definitions to make the property
     easier to prove, feel free to do so.) *)
 
+Inductive bin : Type :=
+  | bin_zero : bin
+  | bin_double : bin -> bin
+  | bin_double_plus_one : bin -> bin.
+
+Fixpoint incr (b : bin) : bin :=
+  match b with
+  | bin_zero => bin_double_plus_one bin_zero
+  | bin_double b' => bin_double_plus_one b'
+  | bin_double_plus_one b' => bin_double (incr b')
+  end.
+
+Fixpoint bin_to_nat (b : bin) : nat :=
+  match b with
+  | bin_zero => 0
+  | bin_double b' => 2 * (bin_to_nat b')
+  | bin_double_plus_one b' => 1 + 2 * (bin_to_nat b')
+  end.
+
+Theorem bin_to_nat_pres_incr : forall b,
+  bin_to_nat (incr b) = 1 + bin_to_nat b.
+Proof.
+  intros.
+  induction b.
+  - reflexivity.
+  - reflexivity.
+  - simpl. rewrite IHb. simpl. rewrite <- plus_n_Sm. reflexivity.
+Qed.
+
+(** If 1 is on the right...
+Theorem bin_to_nat_pres_incr : forall b,
+  bin_to_nat (incr b) = bin_to_nat b + 1.
+Proof.
+  intros.
+  induction b.
+  - reflexivity.
+  - reflexivity.
+  - simpl. rewrite IHb. rewrite plus_comm with (n:=bin_to_nat b) (m:=1).
+    rewrite <- plus_assoc with (n:=1) (m:=bin_to_nat b) (p:=0).
+    rewrite plus_comm with (n:=bin_to_nat b) (m:=0). simpl.
+    rewrite <- plus_assoc with (n:=bin_to_nat b) (m:=bin_to_nat b) (p:=1).
+    rewrite <- plus_assoc with (n:=bin_to_nat b) (m:=bin_to_nat b + 1) (p:=1).
+    rewrite plus_comm with (n:=bin_to_nat b) (m:=bin_to_nat b + 1 + 1).
+    rewrite plus_comm with (n:=bin_to_nat b) (m:=1). simpl.
+    rewrite plus_comm with (n:=bin_to_nat b) (m:=1). simpl.
+    rewrite plus_comm with (n:=bin_to_nat b) (m:=S (bin_to_nat b)). simpl.
+    reflexivity.
+Qed. *)
+
 (** **** Exercise: 5 stars, advanced (binary_inverse)  *)
 (** This exercise is a continuation of the previous exercise about
     binary numbers.  You will need your definitions and theorems from
@@ -596,7 +643,45 @@ Qed.
     here. 
 *)
 
-(* FILL IN HERE *)
+(** (a) *)
+Fixpoint nat_to_bin (n: nat) : bin :=
+  match n with
+  | O => bin_zero
+  | S n' => incr (nat_to_bin n')
+  end.
+
+Theorem nat_bin_nat : forall n,
+  bin_to_nat (nat_to_bin n) = n.
+Proof.
+  intros.
+  induction n.
+  - reflexivity.
+  - simpl. rewrite bin_to_nat_pres_incr. rewrite IHn. reflexivity.
+Qed.
+
+(** (b) *)
+(** There are multiple ways to put a natural number into binary. *)
+
+(** (c) *)
+Fixpoint normalize (b : bin) : bin :=
+  match b with
+  | bin_zero => bin_zero
+  | bin_double b' => match (normalize b') with
+                     | bin_zero => bin_zero
+                     | bin_double b'' => bin_double (bin_double b'')
+                     | bin_double_plus_one b'' => bin_double (bin_double_plus_one b'')
+                     end
+  | bin_double_plus_one b' => incr (nat_to_bin (bin_to_nat (normalize b') + bin_to_nat (normalize b')))
+  end.
+
+Theorem normalize_correct : forall b,
+  nat_to_bin (bin_to_nat b) = normalize b.
+Proof.
+  intros.
+  induction b.
+  - reflexivity.
+  - simpl. Abort.
+
 (** [] *)
 
 (* ###################################################################### *)

@@ -506,9 +506,7 @@ Fixpoint split
            : (list X) * (list Y) :=
   match l with
   | nil => (nil, nil)
-  | h :: t => match h with
-                  | (a, b) => (a :: (fst (split t)), b :: (snd (split t)))
-              end
+  | (a, b) :: t => (a :: (fst (split t)), b :: (snd (split t)))
   end.
 
 Example test_split:
@@ -861,10 +859,20 @@ Proof. reflexivity.  Qed.
 (** Show that [map] and [rev] commute.  You may need to define an
     auxiliary lemma. *)
 
+Lemma map_snoc : forall (X Y : Type) (f : X -> Y) (l: list X) (x : X),
+  map f (snoc l x) = snoc (map f l) (f x).
+Proof.
+  intros. induction l.
+  - reflexivity.
+  - simpl. rewrite IHl. reflexivity.
+Qed.
 
 Theorem map_rev : forall (X Y : Type) (f : X -> Y) (l : list X),
   map f (rev l) = rev (map f l).
-Admitted.
+  intros. induction l.
+  - reflexivity.
+  - simpl. rewrite <- IHl. rewrite map_snoc. reflexivity.
+Qed.
 (** [] *)
 
 (** **** Exercise: 2 stars (flat_map)  *)
@@ -879,12 +887,15 @@ Admitted.
 
 Fixpoint flat_map {X Y:Type} (f:X -> list Y) (l:list X)
                    : (list Y) :=
-  (* FILL IN HERE *) admit.
+  match l with
+  | [] => []
+  | h :: t => (f h) ++ (flat_map f t)
+  end.
 
 Example test_flat_map1:
   flat_map (fun n => [n;n;n]) [1;5;4]
   = [1; 1; 1; 5; 5; 5; 4; 4; 4].
- (* FILL IN HERE *) Admitted.
+Proof. reflexivity. Qed.
 (** [] *)
 
 (** Lists are not the only inductive type that we can write a
@@ -1130,8 +1141,7 @@ Qed.
     below. *)
 
 Definition fold_map {X Y:Type} (f : X -> Y) (l : list X) : list Y :=
-  fold (fun x r => (f x) :: r) l [].
-
+  fold (fun x ly => (f x) :: ly) l [].
 
 (** Write down a theorem [fold_map_correct] in Coq stating that
    [fold_map] is correct, and prove it. *)
@@ -1215,31 +1225,31 @@ Proof. reflexivity. Qed.
 (** Addition of two natural numbers *)
 
 Definition plus (n m : nat) : nat :=
-  (* FILL IN HERE *) admit.
+  fun (X : Type) (f : X -> X) (x : X) => n X f (m X f x).
 
 Example plus_1 : plus zero one = one.
-Proof. (* FILL IN HERE *) Admitted.
+Proof. reflexivity. Qed.
 
 Example plus_2 : plus two three = plus three two.
-Proof. (* FILL IN HERE *) Admitted.
+Proof. reflexivity. Qed.
 
 Example plus_3 :
   plus (plus two two) three = plus one (plus three three).
-Proof. (* FILL IN HERE *) Admitted.
+Proof. reflexivity. Qed.
 
 (** Multiplication *)
 
-Definition mult (n m : nat) : nat := 
-  (* FILL IN HERE *) admit.
+Definition mult (n m : nat) : nat :=
+  fun (X : Type) (f : X -> X) (x : X) => n X (m X f) x.
 
 Example mult_1 : mult one one = one.
-Proof. (* FILL IN HERE *) Admitted.
+Proof. reflexivity. Qed.
 
 Example mult_2 : mult zero (plus three three) = zero.
-Proof. (* FILL IN HERE *) Admitted.
+Proof. reflexivity. Qed.
 
 Example mult_3 : mult two three = plus three three.
-Proof. (* FILL IN HERE *) Admitted.
+Proof. reflexivity. Qed.
 
 (** Exponentiation *)
 
@@ -1249,16 +1259,16 @@ Proof. (* FILL IN HERE *) Admitted.
     type: [nat] itself is usually problematic. *)
 
 Definition exp (n m : nat) : nat :=
-  (* FILL IN HERE *) admit.
+  fun (X : Type) (f : X -> X) (x : X) => (m (X -> X) (n X) f) x.
 
 Example exp_1 : exp two two = plus two two.
-Proof. (* FILL IN HERE *) Admitted.
+Proof. reflexivity. Qed.
 
 Example exp_2 : exp three two = plus (mult two (mult two two)) one.
-Proof. (* FILL IN HERE *) Admitted.
+Proof. reflexivity. Qed.
 
 Example exp_3 : exp three zero = one.
-Proof. (* FILL IN HERE *) Admitted.
+Proof. reflexivity. Qed.
 
 End Church.
 
