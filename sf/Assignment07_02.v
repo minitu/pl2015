@@ -26,6 +26,59 @@ Fixpoint optimize_1mult (a:aexp) : aexp :=
 Theorem optimize_1mult_sound: forall a,
   aeval (optimize_1mult a) = aeval a.
 Proof.
-  admit.
-Qed.
-
+  induction a; try (reflexivity); try (simpl; rewrite IHa1; rewrite IHa2; reflexivity).
+  destruct a1, a2.
+  - destruct n; destruct n0.
+    + reflexivity.
+    + destruct n0.
+      * reflexivity.
+      * reflexivity.
+    + destruct n.
+      * reflexivity.
+      * reflexivity.
+    + destruct n, n0.
+      * reflexivity.
+      * simpl in *. omega.
+      * simpl in *. omega.
+      * reflexivity.
+  - destruct n.
+    + reflexivity.
+    + destruct n.
+      * simpl in *. omega.
+      * simpl in *. rewrite IHa2. reflexivity.
+  - destruct n.
+    + reflexivity.
+    + destruct n.
+      * simpl in *. omega.
+      * simpl in *. rewrite IHa2. reflexivity.
+  - destruct n.
+    + reflexivity.
+    + destruct n.
+      * simpl in *. omega.
+      * simpl in *. rewrite IHa2. reflexivity.
+  - destruct n.
+    + simpl in *. omega.
+    + destruct n.
+      * simpl in *. omega.
+      * simpl in *. rewrite IHa1. reflexivity.
+  - simpl in *. rewrite IHa1. rewrite IHa2. reflexivity.
+  - simpl in *. rewrite IHa1. rewrite IHa2. reflexivity.
+  - simpl in *. rewrite IHa1. rewrite IHa2. reflexivity.
+  - destruct n.
+    + simpl in *. omega.
+    + destruct n.
+      * simpl in *. omega.
+      * simpl in *. rewrite IHa1. reflexivity.
+  - simpl in *. rewrite IHa1. rewrite IHa2. reflexivity.
+  - simpl in *. rewrite IHa1. rewrite IHa2. reflexivity.
+  - simpl in *. rewrite IHa1. rewrite IHa2. reflexivity.
+  - destruct n.
+    + simpl in *. omega.
+    + destruct n.
+      * simpl in *. omega.
+      * simpl in *. rewrite IHa1. reflexivity.
+  - simpl in *. rewrite IHa1. rewrite IHa2. reflexivity.
+  - simpl in *. rewrite IHa1. rewrite IHa2. reflexivity.
+  - simpl in *. rewrite IHa1. rewrite IHa2. reflexivity.
+Qed. 
+      
