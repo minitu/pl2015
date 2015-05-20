@@ -219,27 +219,27 @@ Notation "{{ P }}  c  {{ Q }}" :=
 (** **** Exercise: 1 star, optional (valid_triples)  *)
 (** Which of the following Hoare triples are _valid_ -- i.e., the
     claimed relation between [P], [c], and [Q] is true?
-   1) {{True}} X ::= 5 {{X = 5}}
+   1) {{True}} X ::= 5 {{X = 5}} => Valid
 
-   2) {{X = 2}} X ::= X + 1 {{X = 3}}
+   2) {{X = 2}} X ::= X + 1 {{X = 3}} => true
 
-   3) {{True}} X ::= 5; Y ::= 0 {{X = 5}}
+   3) {{True}} X ::= 5; Y ::= 0 {{X = 5}} => true
 
-   4) {{X = 2 /\ X = 3}} X ::= 5 {{X = 0}}
+   4) {{X = 2 /\ X = 3}} X ::= 5 {{X = 0}} => false
 
-   5) {{True}} SKIP {{False}}
+   5) {{True}} SKIP {{False}} => false
 
-   6) {{False}} SKIP {{True}}
+   6) {{False}} SKIP {{True}} => false???, actually true
 
-   7) {{True}} WHILE True DO SKIP END {{False}}
+   7) {{True}} WHILE True DO SKIP END {{False}} => false
 
    8) {{X = 0}}
       WHILE X == 0 DO X ::= X + 1 END
-      {{X = 1}}
+      {{X = 1}} => true
 
    9) {{X = 1}}
       WHILE X <> 0 DO X ::= X + 1 END
-      {{X = 100}}
+      {{X = 100}} => true???
 
 *)
 (* FILL IN HERE *)

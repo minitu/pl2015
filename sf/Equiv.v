@@ -190,7 +190,10 @@ Theorem skip_right: forall c,
     (c;; SKIP) 
     c.
 Proof. 
-  (* FILL IN HERE *) Admitted.
+  intros c st st'. split.
+  - intros. inversion H. subst. inversion H5. subst. assumption.
+  - intros. apply E_Seq with st'. assumption. apply E_Skip.
+Qed.
 (** [] *)
 
 (** Similarly, here is a simple transformations that simplifies [IFB]
@@ -281,7 +284,14 @@ Theorem IFB_false: forall b c1 c2,
     (IFB b THEN c1 ELSE c2 FI) 
     c2.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  unfold bequiv. unfold cequiv. intros. simpl in H. split.
+  - intros. inversion H0. 
+    + subst. rewrite H in H6. inversion H6.
+    + subst. apply H7.
+  - intros. apply E_IfFalse. specialize H with st.
+    + assumption.
+    + assumption.
+Qed.
 (** [] *)
 
 (** **** Exercise: 3 stars (swap_if_branches)  *)
@@ -293,7 +303,14 @@ Theorem swap_if_branches: forall b e1 e2,
     (IFB b THEN e1 ELSE e2 FI)
     (IFB BNot b THEN e2 ELSE e1 FI).
 Proof.
-  (* FILL IN HERE *) Admitted.
+  unfold bequiv. unfold cequiv. intros. split.
+  - intros. inversion H; subst.
+    + apply E_IfFalse. simpl. rewrite H5. reflexivity. assumption.
+    + apply E_IfTrue. simpl. rewrite H5. reflexivity. assumption.
+  - intros. inversion H. subst.
+    + simpl in *. rewrite negb_true_iff in H5. apply E_IfFalse. assumption. assumption.
+    + subst. simpl in *. rewrite negb_false_iff in H5. apply E_IfTrue. assumption. assumption.
+Qed.
 (** [] *)
 
 (** *** *)
@@ -326,7 +343,6 @@ Proof.
 (** **** Exercise: 2 stars, advanced, optional (WHILE_false_informal)  *)
 (** Write an informal proof of [WHILE_false].
 
-(* FILL IN HERE *)
 []
 *)
 
@@ -393,7 +409,10 @@ Theorem WHILE_true: forall b c,
        (WHILE b DO c END)
        (WHILE BTrue DO SKIP END).
 Proof. 
-  (* FILL IN HERE *) Admitted.
+  split; intros.
+  - apply WHILE_true_nonterm in H0. inversion H0. assumption.
+  - apply WHILE_true_nonterm in H0. inversion H0. unfold bequiv. reflexivity.
+Qed.
 (** [] *)
 
 Theorem loop_unrolling: forall b c,
@@ -424,7 +443,12 @@ Proof.
 Theorem seq_assoc : forall c1 c2 c3,
   cequiv ((c1;;c2);;c3) (c1;;(c2;;c3)).
 Proof.
-  (* FILL IN HERE *) Admitted.
+  split; intros.
+  - inversion H. subst. inversion H2. subst.
+    apply E_Seq with st'1. assumption. apply E_Seq with st'0. assumption. assumption.
+  - inversion H. subst. inversion H5. subst. apply E_Seq with st'1.
+    apply E_Seq with st'0. assumption. assumption. assumption.
+Qed.
 (** [] *)
 
 (** ** The Functional Equivalence Axiom *)
@@ -521,7 +545,14 @@ Theorem assign_aequiv : forall X e,
   aequiv (AId X) e -> 
   cequiv SKIP (X ::= e).
 Proof.
-  (* FILL IN HERE *) Admitted.
+  split; intros.
+  - inversion H0. subst. assert (st' = (update st' X (aeval st' e))).
+    unfold aequiv in H. rewrite <- H. simpl. apply functional_extensionality.
+    intros. rewrite update_same; reflexivity. rewrite H1 at 2. constructor. reflexivity.
+  - inversion H0. subst. replace (update st X (aeval st e)) with st.
+    constructor. apply functional_extensionality. intros. unfold aequiv in H.
+    rewrite <- H. simpl. rewrite update_same; reflexivity.
+Qed.
 (** [] *)
 
 (* ####################################################### *)

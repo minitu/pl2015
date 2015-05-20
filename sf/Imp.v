@@ -986,7 +986,10 @@ Proof.
 Lemma neq_id : forall (T:Type) x y (p q:T), x <> y -> 
                (if eq_id_dec x y then p else q) = q. 
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros. destruct (eq_id_dec x y).
+  - tauto.
+  - reflexivity.
+Qed.
 (** [] *)
 
 
@@ -1589,7 +1592,7 @@ Proof.
 Theorem XtimesYinZ_spec : forall st n1 n2 st',
   st X = n1 -> st Y = n2 -> XtimesYinZ / st || st' -> st' Z = n1 * n2.
 Proof.
-  intros. inversion H1. subst. simpl. unfold update. simpl. reflexivity.
+  intros. inversion H1. subst. simpl. apply update_eq.
 Qed.
 (** [] *)
 
@@ -1605,7 +1608,7 @@ Proof.
      [inversion]). *)
   induction contra; try inversion Heqloopdef.
   rewrite H1 in H. inversion H.
-  apply IHcontra2. subst. reflexivity.
+  apply IHcontra2. assumption.
 Qed.
   
 (** [] *)
@@ -1753,20 +1756,32 @@ Inductive sinstr : Type :=
 Fixpoint s_execute (st : state) (stack : list nat)
                    (prog : list sinstr)
                  : list nat :=
-(* FILL IN HERE *) admit.
-
+  match prog with
+  | [] => stack
+  | h :: t => match h with
+                | SPush n => s_execute st (cons n stack) t
+                | SLoad x => s_execute st (cons (st x) stack) t
+                | SPlus => s_execute st (cons ((hd 0 (tl stack)) + (hd 0 stack)) (tl (tl stack))) t
+                | SMinus => s_execute st (cons ((hd 0 (tl stack)) - (hd 0 stack)) (tl (tl stack))) t
+                | SMult => s_execute st (cons ((hd 0 (tl stack)) * (hd 0 stack)) (tl (tl stack))) t
+                end
+  end.
 
 Example s_execute1 :
      s_execute empty_state []
        [SPush 5; SPush 3; SPush 1; SMinus]
    = [2; 5].
-(* FILL IN HERE *) Admitted.
+Proof.
+  reflexivity.
+Qed.
 
 Example s_execute2 :
      s_execute (update empty_state X 3) [3;4]
        [SPush 4; SLoad X; SMult; SPlus]
    = [15; 4].
-(* FILL IN HERE *) Admitted.
+Proof.
+  reflexivity.
+Qed.
 
 (** Next, write a function which compiles an [aexp] into a stack
     machine program. The effect of running the program should be the
