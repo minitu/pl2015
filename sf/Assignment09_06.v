@@ -25,7 +25,16 @@ Theorem slow_assignment : forall m,
     END
     {{ fun st => st Y = m }}.
 Proof.
-  exact FILL_IN_HERE.
+  intros.
+  eapply hoare_consequence_post. apply hoare_seq with (Q := (fun st => st X + st Y = m)).
+  apply hoare_while. eapply hoare_consequence_pre.
+  apply hoare_seq with (Q := ((fun st => st X + st Y = m)[Y |-> (APlus (AId Y) (ANum 1))])).
+  apply hoare_asgn. apply hoare_asgn.
+  simpl. intros st H. destruct H. apply negb_true in H0. apply beq_nat_false in H0.
+  unfold assn_sub, update. simpl. omega.
+  eapply hoare_consequence_pre. apply hoare_asgn.
+  intros st H. unfold assn_sub, update. simpl. omega.
+  intros st H. destruct H. simpl in H0. apply negb_false in H0. apply beq_nat_true in H0. omega.
 Qed.
 
 (*-- Check --*)

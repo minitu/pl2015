@@ -18,18 +18,18 @@ Require Export Assignment09_08.
 
     Fill in the blanks in following decorated program:
     {{ X = m }} ->>
-    {{                                      }}
+    {{ 1 * X! = m! }}
   Y ::= 1;;
-    {{                                      }}
+    {{ Y * X! = m! }}
   WHILE X <> 0
-  DO   {{                                      }} ->>
-       {{                                      }}
+  DO   {{ Y * X! = m! /\ X <> 0 }} ->>
+       {{ Y * X * (X - 1)! = m! }}
      Y ::= Y * X;;
-       {{                                      }}
+       {{ Y * (X - 1)! = m! }}
      X ::= X - 1
-       {{                                      }}
+       {{ Y * X! = m! }}
   END
-    {{                                      }} ->>
+    {{ Y * X! = m! /\ ~(X <> 0) }} ->>
     {{ Y = m! }}
 *)
 
@@ -45,7 +45,18 @@ Theorem factorial_dec_correct: forall m,
   END
   {{ fun st => st Y = fact m }}.
 Proof.
-  exact FILL_IN_HERE.
+  intros.
+  eapply hoare_consequence_post. apply hoare_seq with (fun st => st Y * fact (st X) = fact m).
+  apply hoare_while. apply hoare_seq with ((fun st => st Y * fact (st X) = fact m)[X |-> (AMinus (AId X) (ANum 1))]). apply hoare_asgn.
+  eapply hoare_consequence_pre. apply hoare_asgn.
+  intros st H. destruct H. simpl in H0. apply negb_true in H0. apply beq_nat_false in H0.
+  unfold assn_sub, update. simpl. assert (st X * fact (st X - 1) = fact (st X)).
+  induction (st X). tauto. simpl. rewrite <- minus_n_O. reflexivity.
+  rewrite <- H. rewrite <- mult_assoc. rewrite H1. reflexivity.
+  eapply hoare_consequence_pre. apply hoare_asgn.
+  unfold assert_implies, assn_sub, update. simpl. intros. rewrite H. omega.
+  intros st H. destruct H. simpl in H0. apply negb_false in H0. apply beq_nat_true in H0.
+  rewrite H0 in H. simpl in H. rewrite <- H. omega.
 Qed.
 
 (*-- Check --*)

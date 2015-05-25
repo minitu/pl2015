@@ -219,7 +219,7 @@ Notation "{{ P }}  c  {{ Q }}" :=
 (** **** Exercise: 1 star, optional (valid_triples)  *)
 (** Which of the following Hoare triples are _valid_ -- i.e., the
     claimed relation between [P], [c], and [Q] is true?
-   1) {{True}} X ::= 5 {{X = 5}} => Valid
+   1) {{True}} X ::= 5 {{X = 5}} => true
 
    2) {{X = 2}} X ::= X + 1 {{X = 3}} => true
 
@@ -239,7 +239,7 @@ Notation "{{ P }}  c  {{ Q }}" :=
 
    9) {{X = 1}}
       WHILE X <> 0 DO X ::= X + 1 END
-      {{X = 100}} => true???
+      {{X = 100}} => false
 
 *)
 (* FILL IN HERE *)
@@ -425,7 +425,21 @@ Proof.
    ...into formal statements [assn_sub_ex1, assn_sub_ex2] 
    and use [hoare_asgn] to prove them. *)
 
-(* FILL IN HERE *)
+Example assn_sub_ex1 :
+  {{(fun st => st X <= 5) [X |-> (APlus (AId X) (ANum 1))]}}
+  (X ::= (APlus (AId X) (ANum 1)))
+  {{fun st => st X <= 5}}.
+Proof.
+  apply hoare_asgn.
+Qed.
+
+Example assn_sub_ex2 :
+  {{(fun st => 0 <= st X /\ st X <= 5) [X |-> ANum 3]}}
+  (X ::= (ANum 3))
+  {{fun st => 0 <= st X /\ st X <= 5}}.
+Proof.
+  apply hoare_asgn.
+Qed.
 (** [] *)
 
 (** **** Exercise: 2 stars (hoare_asgn_wrong)  *)
@@ -440,7 +454,7 @@ Proof.
     arithmetic expression [a], and your counterexample needs to
     exhibit an [a] for which the rule doesn't work. *)
 
-(* FILL IN HERE *)
+(** Have a be X + 1. *)
 (** [] *)
 
 (** **** Exercise: 3 stars, advanced (hoare_asgn_fwd)  *)
@@ -468,7 +482,14 @@ Theorem hoare_asgn_fwd :
   {{fun st => P (update st X m) /\ st X = aeval (update st X m) a }}.
 Proof.
   intros functional_extensionality m a P.
-  (* FILL IN HERE *) Admitted.
+  unfold hoare_triple. intros. destruct H0. inversion H. subst.
+  assert (update (update st X (aeval st a)) X (st X) = st) as Eq.
+  - apply functional_extensionality. intros.
+    rewrite update_shadow. rewrite update_same; reflexivity.
+  - rewrite Eq. split.
+    + assumption.
+    + reflexivity.
+Qed.
 (** [] *)
 
 (** **** Exercise: 2 stars, advanced (hoare_asgn_fwd_exists)  *)
@@ -493,7 +514,15 @@ Theorem hoare_asgn_fwd_exists :
                 st X = aeval (update st X m) a }}.
 Proof.
   intros functional_extensionality a P.
-  (* FILL IN HERE *) Admitted.
+  unfold hoare_triple. intros. inversion H. subst.
+  rewrite update_eq. exists (st X).
+  assert (update (update st X (aeval st a)) X (st X) = st) as Eq.
+  - apply functional_extensionality. intros.
+    rewrite update_shadow. rewrite update_same; reflexivity.
+  - rewrite Eq. split.
+    + assumption.
+    + reflexivity.
+Qed.
 (** [] *)
 
 (* ####################################################### *) 
@@ -718,7 +747,24 @@ Qed.
    ...into formal statements [assn_sub_ex1', assn_sub_ex2'] and 
    use [hoare_asgn] and [hoare_consequence_pre] to prove them. *)
 
-(* FILL IN HERE *)
+Example assn_sub_ex1' :
+  {{fun st => st X + 1 <= 5}}
+  X ::= (APlus (AId X) (ANum 0))
+  {{fun st => st X <= 5}}.
+Proof.
+  eapply hoare_consequence_pre. apply hoare_asgn.
+  intros st H. unfold assn_sub. simpl. rewrite plus_comm. simpl. rewrite update_same.
+  inversion H. omega. omega. reflexivity.
+Qed.
+
+Example assn_sub_ex2' :
+  {{fun st => 0 <= 3 /\ 3 <= 5}}
+  X ::= (ANum 3)
+  {{fun st => 0 <= st X /\ st X <= 5}}.
+Proof.
+  eapply hoare_consequence_pre. apply hoare_asgn.
+  intros st H. unfold assn_sub. simpl. rewrite update_eq. assumption.
+Qed.
 (** [] *)
 
 (* ####################################################### *)
@@ -809,7 +855,12 @@ Example hoare_asgn_example4 :
   {{fun st => True}} (X ::= (ANum 1);; Y ::= (ANum 2)) 
   {{fun st => st X = 1 /\ st Y = 2}}.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  eapply hoare_seq. apply hoare_asgn. eapply hoare_consequence_pre.
+  apply hoare_asgn. intros st H. unfold assn_sub. simpl.
+  split.
+  - apply update_neq. unfold not. intros. inversion H0.
+  - apply update_eq.
+Qed.
 (** [] *)
 
 (** **** Exercise: 3 stars (swap_exercise)  *)
@@ -1013,7 +1064,14 @@ Theorem if_minus_plus :
   FI
   {{fun st => st Y = st X + st Z}}. 
 Proof.
-  (* FILL IN HERE *) Admitted.
+  apply hoare_if.
+  - eapply hoare_consequence_pre. apply hoare_asgn.
+    unfold bassn, assn_sub, update, assert_implies.
+    simpl. intros. destruct H. apply ble_nat_true in H0. omega.
+  - eapply hoare_consequence_pre. apply hoare_asgn.
+    unfold bassn, assn_sub, update, assert_implies.
+    simpl. intros. reflexivity.
+Qed.
 
 (* ####################################################### *)
 (** *** Exercise: One-sided conditionals *)

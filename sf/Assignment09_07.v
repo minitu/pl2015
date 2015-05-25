@@ -23,7 +23,16 @@ Theorem slow_addition_dec_correct : forall n m,
   END
   {{fun st => st Y = n + m}}.
 Proof.
-  exact FILL_IN_HERE.
+  intros. eapply hoare_consequence.
+  apply hoare_while. eapply hoare_consequence_pre.
+  apply hoare_seq with (Q := ((fun st => st X + st Y = n + m)[X |-> (AMinus (AId X) (ANum 1))])).
+  apply hoare_asgn. apply hoare_asgn.
+  unfold assert_implies, assn_sub, update. simpl. intros.
+  destruct H. apply negb_true in H0. apply beq_nat_false in H0. omega.
+  unfold assert_implies, assn_sub, update. intros.
+  destruct H. omega.
+  unfold assert_implies, assn_sub, update. intros.
+  destruct H. simpl in H0. apply negb_false in H0. apply beq_nat_true in H0. omega.
 Qed.
 
 (*-- Check --*)

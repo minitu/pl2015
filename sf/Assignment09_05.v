@@ -13,7 +13,12 @@ Theorem if_minus_plus :
   FI
   {{fun st => st Y = st X + st Z}}. 
 Proof.
-  exact FILL_IN_HERE.
+  eapply hoare_consequence_pre. apply hoare_if.
+  - apply hoare_asgn.
+  - apply hoare_asgn.
+  - intros st H. unfold assn_sub, update. simpl. split.
+    + intros. apply ble_nat_true in H0. omega.
+    + intros. omega.
 Qed.
 
 (*-- Check --*)
