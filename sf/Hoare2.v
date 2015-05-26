@@ -947,22 +947,23 @@ Definition is_wp P c Q :=
 (** What are the weakest preconditions of the following commands
    for the following postconditions?
   1) {{ ? }}  SKIP  {{ X = 5 }}
-
+     X = 5
   2) {{ ? }}  X ::= Y + Z {{ X = 5 }}
-
+     Y + Z = 5
   3) {{ ? }}  X ::= Y  {{ X = Y }}
-
+     Y = Y (or True)
   4) {{ ? }}
      IFB X == 0 THEN Y ::= Z + 1 ELSE Y ::= W + 2 FI
      {{ Y = 5 }}
-
+     (X = 0 /\ Z = 4) \/ (X <> 0 /\ W = 3)
   5) {{ ? }}
      X ::= 5
      {{ X = 0 }}
-
+     False
   6) {{ ? }}
      WHILE True DO X ::= 0 END
      {{ X = 0 }}
+     True
 *)
 (* FILL IN HERE *)
 (** [] *)
