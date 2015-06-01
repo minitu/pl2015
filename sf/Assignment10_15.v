@@ -17,7 +17,13 @@ Theorem bexp_strong_progress: forall st b,
   (b = BTrue \/ b = BFalse) \/
   exists b', b / st ==>b b'.
 Proof.
-  exact FILL_IN_HERE.
+  induction b; eauto; right; try (rename a into a1; rename a0 into a2);
+  try (remember (aexp_strong_progress st a1) as Ha1; clear HeqHa1;
+    remember (aexp_strong_progress st a2) as Ha2; clear HeqHa2;
+    destruct Ha1 as [[? ?] | [? ?]];
+    destruct Ha2 as [[? ?] | [? ?]]; subst; eauto).
+  - destruct IHb as [[? | ?] | [? ?]]; subst; eauto.
+  - destruct IHb1 as [[? | ?] | [? ?]]; destruct IHb2 as [[? | ?] | [? ?]]; subst; eauto.
 Qed.
 
 (*-- Check --*)

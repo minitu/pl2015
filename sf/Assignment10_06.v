@@ -9,7 +9,19 @@ Proof.
   inversion P1 as [P11 P12]; clear P1. inversion P2 as [P21 P22]; clear P2. 
   generalize dependent y2. 
   (* We recommend using this initial setup as-is! *)
-  exact FILL_IN_HERE.
+  induction P11.
+  - intros. inversion P21; subst. 
+    + reflexivity.
+    + exfalso. apply P12. exists y. assumption.
+  - intros. inversion P21; subst.
+    + exfalso. apply P22. exists y. assumption.
+    + apply IHP11.
+      * assumption.
+      * assert (y = y0). eapply step_deterministic_alt. apply H. apply H0. subst.
+        inversion P21; subst. clear H0. rename y0 into y. assumption.
+        rename y0 into y1. assert (y = y1). eapply step_deterministic_alt. apply H2. apply H0.
+        subst. assumption.
+      * assumption.
 Qed.
 
 (*-- Check --*)

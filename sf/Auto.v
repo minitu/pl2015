@@ -230,7 +230,8 @@ Example auto_example_8' : exists s',
     ELSE (Y ::= APlus (AId X) (AId Z))
   FI) / st12 || s'. 
 Proof.
-  eexists. info_auto. 
+  eexists. info_auto.
+  (* Same as info_eauto *)
 Qed.
 
 

@@ -31,10 +31,26 @@ Require Export Assignment10_07.
     properties of [==>*]: that it is reflexive, transitive, and
     includes [==>]. *)
 
+Lemma multistep_congr_1 : forall t1 t1' t2,
+     t1 ==>* t1' ->
+     P t1 t2 ==>* P t1' t2.
+Proof.
+  intros t1 t1' t2 H. multi_cases (induction H) Case.
+    Case "multi_refl". apply multi_refl. 
+    Case "multi_step". apply multi_step with (P y t2). 
+        apply ST_Plus1. apply H. 
+        apply IHmulti.  Qed.
+
 Theorem eval__multistep : forall t n,
   t || n -> t ==>* C n.
 Proof.
-  exact FILL_IN_HERE.
+  intros. induction H.
+  - apply multi_refl.
+  - apply multi_trans with (P (C n1) t2).
+    + apply multistep_congr_1. assumption.
+    + apply multi_trans with (P (C n1) (C n2)).
+      * apply multistep_congr_2. apply v_const. assumption.
+      * apply multi_R. apply ST_PlusConstConst.
 Qed.
 
 (*-- Check --*)
