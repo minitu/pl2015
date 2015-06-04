@@ -185,7 +185,10 @@ Hint Unfold stuck.
 Example some_term_is_stuck :
   exists t, stuck t.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  exists (tsucc ttrue). split.
+  - unfold normal_form, not. intros. inversion H. inversion H0. subst. inversion H2.
+  - unfold value, not. intros. destruct H. inversion H. inversion H. inversion H1.
+Qed.
 (** [] *)
 
 (** However, although values and normal forms are not the same in this
@@ -205,7 +208,21 @@ Proof.
 Lemma value_is_nf : forall t,
   value t -> step_normal_form t.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  unfold normal_form, not. intros t Hvt. inversion Hvt.
+  - inversion H; intros [t' Hst']; inversion Hst'.
+  - induction H as [| t].
+    intros [t' Hst']; inversion Hst'.
+    intros [t' Hst']; inversion Hst'; subst.
+    apply IHnvalue. right. assumption.
+    exists t1'. assumption.
+Qed.
+(*
+  intros. unfold normal_form, not. intros H'. destruct H' as [t' Hst].
+  destruct H; destruct H; try inversion Hst.
+  subst. induction H.
+  - inversion H1.
+  - 
+*)
 (** [] *)
 
 
@@ -216,7 +233,26 @@ Proof.
 Theorem step_deterministic:
   deterministic step.
 Proof with eauto.
-  (* FILL IN HERE *) Admitted.
+  unfold deterministic.
+  intros. generalize dependent y2. induction H; intros;
+  inversion H0; subst; try (solve by inversion); try reflexivity.
+  - rewrite (IHstep t1'0). reflexivity. assumption.
+  - rewrite (IHstep t1'0). reflexivity. assumption.
+  - assert (value t1). right. assumption.
+    apply value_is_nf in H1. unfold normal_form, not in H1.
+    inversion H2; subst. exfalso. apply H1...
+  - assert (value y2). right. assumption.
+    apply value_is_nf in H1. unfold normal_form, not in H1.
+    inversion H; subst. exfalso. apply H1...
+  - rewrite (IHstep t1'0). reflexivity. assumption.
+  - assert (value t1). right. assumption.
+    apply value_is_nf in H1. unfold normal_form, not in H1.
+    inversion H2; subst. exfalso. apply H1...
+  - assert (value t0). right. assumption.
+    apply value_is_nf in H1. unfold normal_form, not in H1.
+    inversion H; subst. exfalso. apply H1...
+  - rewrite (IHstep t1'0). reflexivity. assumption.
+Qed.
 (** [] *)
 
 
@@ -325,7 +361,7 @@ Qed.
 Example has_type_not : 
   ~ (|- tif tfalse tzero ttrue \in TBool).
 Proof.
-  intros Contra. solve by inversion 2.  Qed.
+  intros Contra.  solve by inversion 2.  Qed.
 
 (** **** Exercise: 1 star, optional (succ_hastype_nat__hastype_nat)  *)
 Example succ_hastype_nat__hastype_nat : forall t,
@@ -392,7 +428,22 @@ Proof with auto.
     SCase "t1 can take a step".
       inversion H as [t1' H1].
       exists (tif t1' t2 t3)...
-    (* FILL IN HERE *) Admitted.
+  - destruct IHHT.
+    apply (nat_canonical t1 HT) in H. inversion H; subst; clear H.
+    left...
+    left...
+    inversion H as [t1' H1]; right; eauto.
+  - destruct IHHT.
+    apply (nat_canonical t1 HT) in H. inversion H; subst; clear H.
+    right; eauto.
+    right; eauto.
+    inversion H as [t1' H1]; right; eauto.
+  - destruct IHHT.
+    apply (nat_canonical t1 HT) in H. inversion H; subst; clear H.
+    right; eauto.
+    right; eauto.
+    inversion H as [t1' H1]; right; eauto.
+Qed.
 (** [] *)
 
 (** **** Exercise: 3 stars, advanced (finish_progress_informal)  *)
@@ -431,12 +482,20 @@ Proof with auto.
 (** Quick review.  Answer _true_ or _false_.  In this language...
       - Every well-typed normal form is a value.
 
+        ( True, and not every normal form is a value. )
+
       - Every value is a normal form.
+
+        ( True )
 
       - The single-step evaluation relation is
         a partial function (i.e., it is deterministic).
 
+        ( True, some (not all) forms can take a step which is unique. )
+
       - The single-step evaluation relation is a _total_ function.
+
+        ( False, there are some forms that cannot take a step. )
 
 *)
 (** [] *)
@@ -477,7 +536,15 @@ Proof with auto.
       SCase "ST_IfFalse". assumption.
       SCase "ST_If". apply T_If; try assumption.
         apply IHHT1; assumption.
-    (* FILL IN HERE *) Admitted.
+    - inversion HE; subst. apply T_Succ. apply IHHT. assumption.
+    - inversion HE; subst. assumption.
+      inversion H0.
+      constructor.
+      subst. inversion HT. subst. assumption.
+      constructor. apply IHHT. assumption.
+    - inversion HE; subst. constructor. constructor.
+      constructor. apply IHHT. assumption.
+Qed.
 (** [] *)
 
 (** **** Exercise: 3 stars, advanced (finish_preservation_informal)  *)
@@ -518,12 +585,36 @@ Proof with auto.
     each one is doing.  The set-up for this proof is similar, but
     not exactly the same. *)
 
+Lemma nvalue_is_nat : forall t, nvalue t -> |- t \in TNat.
+Proof.
+  intros. induction H.
+  - constructor.
+  - constructor. assumption.
+Qed.
+
 Theorem preservation' : forall t t' T,
   |- t \in T ->
   t ==> t' ->
   |- t' \in T.
 Proof with eauto.
-  (* FILL IN HERE *) Admitted.
+  intros t t' T HT HE. generalize dependent T.
+  induction HE; intros.
+  - inversion HT; subst. assumption.
+  - inversion HT; subst. assumption.
+  - inversion HT; subst. constructor.
+    apply IHHE. assumption.
+    assumption.
+    assumption.
+  - inversion HT; subst. constructor.
+    apply IHHE. assumption.
+  - inversion HT; subst. constructor.
+  - inversion HT; subst. apply nvalue_is_nat. assumption.
+  - inversion HT; subst. constructor. apply IHHE. assumption.
+  - inversion HT; subst. constructor.
+  - inversion HT; subst. constructor.
+  - inversion HT; subst. constructor. apply IHHE. assumption.
+Qed.
+    
 (** [] *)
 
 (* ###################################################################### *)
@@ -566,6 +657,11 @@ Example astep_example1 :
   (APlus (ANum 3) (AMult (ANum 3) (ANum 4))) / empty_state 
   ==>a* (ANum 15).
 Proof.
+  eapply multi_step. apply AS_Plus2. apply av_num. apply AS_Mult.
+  eapply multi_step. apply AS_Plus.
+  apply multi_refl.
+Qed.
+(*
   apply multi_step with (APlus (ANum 3) (ANum 12)).
     apply AS_Plus2. 
       apply av_num. 
@@ -573,7 +669,7 @@ Proof.
   apply multi_step with (ANum 15).
     apply AS_Plus.
   apply multi_refl.
-Qed.
+*)
 
 (** We repeatedly apply [multi_step] until we get to a normal
     form. The proofs that the intermediate steps are possible are
@@ -644,7 +740,8 @@ Theorem normalize_ex : exists e',
   (AMult (ANum 3) (AMult (ANum 2) (ANum 1))) / empty_state 
   ==>a* e'.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  eexists. normalize.
+Qed.
 
 (** [] *)
 
@@ -655,7 +752,8 @@ Theorem normalize_ex' : exists e',
   (AMult (ANum 3) (AMult (ANum 2) (ANum 1))) / empty_state 
   ==>a* e'.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  apply ex_intro with (ANum 6). normalize.
+Qed.
 (** [] *)
 
 
