@@ -7,7 +7,7 @@ Theorem normalize_ex : exists e',
   (AMult (ANum 3) (AMult (ANum 2) (ANum 1))) / empty_state 
   ==>a* e'.
 Proof.
-  eexists. normalize.
+  eapply ex_intro. normalize.
 Qed.
 
 (*-- Check --*)
