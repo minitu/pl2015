@@ -387,7 +387,21 @@ where "'[' x ':=' s ']' t" := (subst x s t).
 Inductive substi (s:tm) (x:id) : tm -> tm -> Prop := 
   | s_var1 : 
       substi s x (tvar x) s
-  (* FILL IN HERE *)
+  | s_var2 : forall x',
+      x <> x' -> substi s x (tvar x') (tvar x')
+  | s_abs1 : forall T t1,
+      substi s x (tabs x T t1) (tabs x T t1)
+  | s_abs2 : forall x' T t1 t1',
+      x <> x' -> substi s x t1 t1' -> substi s x (tabs x' T t1) (tabs x' T t1')
+  | s_app : forall t1 t2 t1' t2',
+      substi s x t1 t1' -> substi s x t2 t2' -> substi s x (tapp t1 t2) (tapp t1' t2')
+  | s_true :
+      substi s x (ttrue) (ttrue)
+  | s_false :
+      substi s x (tfalse) (tfalse)
+  | s_if : forall t1 t2 t3 t1' t2' t3',
+      substi s x t1 t1' -> substi s x t2 t2' -> substi s x t3 t3' ->
+      substi s x (tif t1 t2 t3) (tif t1' t2' t3')
 .
 
 Hint Constructors substi.
@@ -395,7 +409,13 @@ Hint Constructors substi.
 Theorem substi_correct : forall s x t t',
   [x:=s]t = t' <-> substi s x t t'.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  split; intros.
+  - generalize dependent t'; induction t; intros; subst.
+    + destruct (eq_id_dec x0 i); subst; simpl.
+      rewrite eq_id. constructor.
+      rewrite neq_id. constructor. assumption. assumption.
+    + simpl. Admitted.
+    
 (** [] *)
 
 (* ################################### *)
@@ -582,9 +602,19 @@ Lemma step_example5 :
        (tapp (tapp idBBBB idBB) idB)
   ==>* idB.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  eapply multi_step.
+  apply ST_App1. apply ST_AppAbs. auto. simpl.
+  eapply multi_step.
+  apply ST_AppAbs. auto. simpl.
+  apply multi_refl.
+Qed.
 
-(* FILL IN HERE *)
+Lemma step_example5' :
+       (tapp (tapp idBBBB idBB) idB)
+  ==>* idB.
+Proof.
+  normalize.
+Qed.
 (** [] *)
 
 (* ###################################################################### *)
@@ -749,7 +779,11 @@ Example typing_example_2_full :
           (tapp (tvar y) (tapp (tvar y) (tvar x))))) \in
     (TArrow TBool (TArrow (TArrow TBool TBool) TBool)).
 Proof.
-  (* FILL IN HERE *) Admitted.
+  apply T_Abs. apply T_Abs.
+  apply T_App with TBool. apply T_Var. reflexivity.
+  apply T_App with TBool. apply T_Var. reflexivity.
+  apply T_Var. reflexivity.
+Qed.
 (** [] *)
 
 (** **** Exercise: 2 stars (typing_example_3)  *)
@@ -769,7 +803,14 @@ Example typing_example_3 :
                (tapp (tvar y) (tapp (tvar x) (tvar z)))))) \in
       T.
 Proof with auto.
-  (* FILL IN HERE *) Admitted.
+  eexists. apply T_Abs. apply T_Abs. apply T_Abs. eapply T_App. apply T_Var. reflexivity.
+  eapply T_App. apply T_Var. reflexivity. apply T_Var. reflexivity.
+Qed.
+(*
+  exists (TArrow (TArrow TBool TBool) (TArrow (TArrow TBool TBool) (TArrow TBool TBool))).
+  apply T_Abs. apply T_Abs. apply T_Abs. eapply T_App. apply T_Var. reflexivity.
+  eapply T_App. apply T_Var. reflexivity. apply T_Var. reflexivity.
+*)
 (** [] *)
 
 (** We can also show that terms are _not_ typable.  For example, let's
@@ -804,6 +845,13 @@ Proof.
           empty |- \x:S. x x : T).
 *)
 
+Lemma arrow_inv : ~ (exists T T', TArrow T T' = T).
+Proof.
+  intro Hc. inversion Hc. induction x0; intros.
+  - inversion H. inversion H0.
+  - inversion H. inversion H0. apply IHx0_1. eexists. apply H2.
+Qed.
+
 Example typing_nonexample_3 :
   ~ (exists S, exists T,
         empty |- 
@@ -811,7 +859,17 @@ Example typing_nonexample_3 :
              (tapp (tvar x) (tvar x))) \in
           T).
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros Hc. inversion Hc.
+  inversion H; subst; clear H.
+  inversion H0; subst; clear H0.
+  inversion H5; subst; clear H5. 
+  inversion H2; subst; clear H2.
+  inversion H4; subst; clear H4.
+  rewrite extend_eq in H1. rewrite extend_eq in H2.
+  inversion H1. inversion H2. subst.
+  remember arrow_inv. clear Heqn. rename n into Contra. apply Contra.
+  exists T11, T12. assumption.
+Qed.
 (** [] *)
 
 

@@ -281,7 +281,7 @@ Require Export Stlc.
           inl n => n
         | inr b => if b then 1 else 0
 >>
-*)
+ *)
           
 (** More formally... *)
 
