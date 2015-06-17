@@ -538,12 +538,10 @@ Proof with auto.
         apply IHHT1; assumption.
     - inversion HE; subst. apply T_Succ. apply IHHT. assumption.
     - inversion HE; subst. assumption.
-      inversion H0.
-      constructor.
-      subst. inversion HT. subst. assumption.
+      inversion H0. constructor. inversion HT; subst. assumption.
       constructor. apply IHHT. assumption.
-    - inversion HE; subst. constructor. constructor.
-      constructor. apply IHHT. assumption.
+    - inversion HE; subst; try constructor.
+      apply IHHT. assumption.
 Qed.
 (** [] *)
 

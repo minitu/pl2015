@@ -903,8 +903,6 @@ Proof.
   END
     Write a decorated program for this. *)
 
-(* FILL IN HERE *)
-
 (* ####################################################### *)
 (** * Weakest Preconditions (Advanced) *)
 
@@ -977,7 +975,14 @@ Theorem is_wp_example :
   is_wp (fun st => st Y <= 4)
     (X ::= APlus (AId Y) (ANum 1)) (fun st => st X <= 5).
 Proof.
-  (* FILL IN HERE *) Admitted.
+  unfold is_wp, assert_implies. split.
+  eapply hoare_consequence_pre. apply hoare_asgn.
+  unfold assert_implies, assn_sub, update. simpl. intros. omega.
+  intros. unfold hoare_triple in H.
+  remember (update st X (aeval st (APlus (AId Y) (ANum 1)))) as st'.
+  assert (st' X <= 5). apply H with st. rewrite Heqst'. constructor. reflexivity.
+  assumption. rewrite Heqst' in H1. simpl in H1. rewrite update_eq in H1. omega.
+Qed.
 (** [] *)
 
 (** **** Exercise: 2 stars, advanced (hoare_asgn_weakest)  *)
@@ -987,7 +992,12 @@ Proof.
 Theorem hoare_asgn_weakest : forall Q X a,
   is_wp (Q [X |-> a]) (X ::= a) Q.
 Proof.
-(* FILL IN HERE *) Admitted.
+  intros. unfold is_wp. split.
+  apply hoare_asgn.
+  intros. unfold hoare_triple in H. unfold assert_implies, assn_sub.
+  intros. remember (update st X (aeval st a)) as st'.
+  apply H with st. rewrite Heqst'. constructor. reflexivity. assumption.
+Qed.
 (** [] *)
 
 (** **** Exercise: 2 stars, advanced, optional (hoare_havoc_weakest)  *)

@@ -408,13 +408,26 @@ Hint Constructors substi.
 
 Theorem substi_correct : forall s x t t',
   [x:=s]t = t' <-> substi s x t t'.
-Proof.
+Proof with auto.
   split; intros.
   - generalize dependent t'; induction t; intros; subst.
     + destruct (eq_id_dec x0 i); subst; simpl.
       rewrite eq_id. constructor.
       rewrite neq_id. constructor. assumption. assumption.
-    + simpl. Admitted.
+    + simpl. constructor. apply IHt1. reflexivity. apply IHt2. reflexivity.
+    + simpl. destruct (eq_id_dec x0 i); subst; simpl.
+      constructor. constructor. assumption. apply IHt. reflexivity.
+    + constructor.
+    + constructor.
+    + simpl. constructor. apply IHt1... apply IHt2... apply IHt3...
+  - generalize dependent t'; induction t; intros; subst; inversion H; subst; simpl; auto.
+    + rewrite eq_id...
+    + rewrite neq_id...
+    + apply IHt1 in H2. apply IHt2 in H4. subst...
+    + rewrite eq_id...
+    + rewrite neq_id... apply IHt in H5. subst...
+    + apply IHt1 in H3. apply IHt2 in H5. apply IHt3 in H6. subst...
+Qed.
     
 (** [] *)
 

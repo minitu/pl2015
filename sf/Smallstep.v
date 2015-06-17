@@ -446,19 +446,11 @@ Theorem step_deterministic :
 Proof.
   unfold deterministic.
   intros x y1 y2 Hy1. generalize dependent y2.
-  induction Hy1; intros y2 Hy2.
-  - inversion Hy2; subst.
-    + reflexivity.
-    + inversion H2.
-    + inversion H3.
-  - inversion Hy2; subst.
-    + inversion Hy1.
-    + rewrite <- (IHHy1 t1'0). reflexivity. assumption.
-    + inversion H1. subst. inversion Hy1.
-  - inversion Hy2; subst.
-    + inversion Hy1.
-    + inversion H. subst. inversion H3.
-    + rewrite <- (IHHy1 t2'0). reflexivity. assumption.
+  induction Hy1; intros y2 Hy2; inversion Hy2; subst; try solve by inversion; try reflexivity.
+  - apply IHHy1 in H2. rewrite H2. reflexivity.
+  - inversion H1; subst. inversion Hy1.
+  - inversion H; subst. inversion H3.
+  - apply IHHy1 in H4. rewrite H4. reflexivity.
 Qed.
 (** [] *)
 
@@ -741,7 +733,7 @@ Definition bool_step_prop2 :=
   ==> 
      ttrue.
 
-(* True *)
+(* False, should be 'tif ttrue ttrue ttrue' *)
 
 Lemma bool_step_prop2_false : ~ bool_step_prop2.
 Proof.
@@ -789,11 +781,9 @@ Qed.
 Theorem step_deterministic :
   deterministic step.
 Proof.
-  unfold deterministic. intros. generalize dependent y2. induction H.
-  - intros. inversion H0. subst. reflexivity. subst. inversion H4.
-  - intros. inversion H0. subst. reflexivity. subst. inversion H4.
-  - intros. inversion H0. subst. inversion H. subst. inversion H.
-    subst. rewrite <- (IHstep t1'0). reflexivity. assumption.
+  unfold deterministic. intros. generalize dependent y2.
+  induction H; intros; inversion H0; subst; try reflexivity; try solve by inversion.
+  apply IHstep in H5. rewrite H5. reflexivity.
 Qed.
 (** [] *)
 
@@ -1104,9 +1094,7 @@ Proof.
     + apply IHP11.
       * assumption.
       * assert (y = y0). eapply step_deterministic. apply H. apply H0. subst.
-        inversion P21; subst. clear H0. rename y0 into y. assumption.
-        rename y0 into y1. assert (y = y1). eapply step_deterministic. apply H2. apply H0.
-        subst. assumption.
+        assumption.
       * assumption.
 Qed.
 (** [] *)
@@ -1255,8 +1243,8 @@ Proof.
   - apply multi_trans with (P (C n1) t2).
     + apply multistep_congr_1. assumption.
     + apply multi_trans with (P (C n1) (C n2)).
-      * apply multistep_congr_2. apply v_const. assumption.
-      * apply multi_R. apply ST_PlusConstConst.
+      * apply multistep_congr_2. constructor. assumption.
+      * apply multi_R. constructor.
 Qed.
 (** [] *)
 
@@ -1753,8 +1741,7 @@ Proof.
     + split.
       * rewrite update_eq. reflexivity.
       * inversion Hst'. destruct H1. rewrite update_neq.
-        assumption.
-        destruct (eq_id_dec X Y) eqn:Hxy. inversion Hxy. assumption.
+        assumption. destruct (eq_id_dec X Y) eqn:Hxy. inversion Hxy. assumption.
 Qed.
 (** [] *)
 

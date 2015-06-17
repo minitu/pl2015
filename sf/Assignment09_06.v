@@ -26,15 +26,15 @@ Theorem slow_assignment : forall m,
     {{ fun st => st Y = m }}.
 Proof.
   intros.
-  eapply hoare_consequence_post. apply hoare_seq with (Q := (fun st => st X + st Y = m)).
-  apply hoare_while. eapply hoare_consequence_pre.
-  apply hoare_seq with (Q := ((fun st => st X + st Y = m)[Y |-> (APlus (AId Y) (ANum 1))])).
-  apply hoare_asgn. apply hoare_asgn.
-  simpl. intros st H. destruct H. apply negb_true in H0. apply beq_nat_false in H0.
-  unfold assn_sub, update. simpl. omega.
+  eapply hoare_seq with (Q:= (fun st => st X + st Y = m)).
+  eapply hoare_consequence_post. apply hoare_while.
+  eapply hoare_seq. apply hoare_asgn. eapply hoare_consequence_pre. apply hoare_asgn.
+  unfold assert_implies, assn_sub, update. simpl. intros. destruct H.
+  rewrite negb_true_iff in H0. rewrite beq_nat_false_iff in H0. omega.
+  unfold assert_implies, assn_sub, update. simpl. intros. destruct H.
+  rewrite negb_false_iff in H0. rewrite beq_nat_true_iff in H0. omega.
   eapply hoare_consequence_pre. apply hoare_asgn.
-  intros st H. unfold assn_sub, update. simpl. omega.
-  intros st H. destruct H. simpl in H0. apply negb_false in H0. apply beq_nat_true in H0. omega.
+  unfold assert_implies, assn_sub, update. simpl. intros. omega.
 Qed.
 
 (*-- Check --*)

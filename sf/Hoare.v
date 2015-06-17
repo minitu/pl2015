@@ -229,9 +229,9 @@ Notation "{{ P }}  c  {{ Q }}" :=
 
    5) {{True}} SKIP {{False}} => false
 
-   6) {{False}} SKIP {{True}} => false???, actually true
+   6) {{False}} SKIP {{True}} => true
 
-   7) {{True}} WHILE True DO SKIP END {{False}} => false
+   7) {{True}} WHILE True DO SKIP END {{False}} => true
 
    8) {{X = 0}}
       WHILE X == 0 DO X ::= X + 1 END
@@ -239,8 +239,9 @@ Notation "{{ P }}  c  {{ Q }}" :=
 
    9) {{X = 1}}
       WHILE X <> 0 DO X ::= X + 1 END
-      {{X = 100}} => false
+      {{X = 100}} => true
 
+   If a program never terminates, you can have whatever pre-condition and post-condition you want.
 *)
 (* FILL IN HERE *)
 (** [] *)
@@ -753,8 +754,7 @@ Example assn_sub_ex1' :
   {{fun st => st X <= 5}}.
 Proof.
   eapply hoare_consequence_pre. apply hoare_asgn.
-  intros st H. unfold assn_sub. simpl. rewrite plus_comm. simpl. rewrite update_same.
-  inversion H. omega. omega. reflexivity.
+  intros st H. unfold assn_sub. simpl. rewrite plus_comm. simpl. rewrite update_same; omega.
 Qed.
 
 Example assn_sub_ex2' :
@@ -871,14 +871,20 @@ Qed.
 *)
 
 Definition swap_program : com :=
-  (* FILL IN HERE *) admit.
+  Z ::= AId X;;
+  X ::= AId Y;;
+  Y ::= AId Z.
 
 Theorem swap_exercise :
   {{fun st => st X <= st Y}} 
   swap_program
   {{fun st => st Y <= st X}}.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  unfold swap_program. eapply hoare_consequence_pre.
+  eapply hoare_seq. eapply hoare_seq. apply hoare_asgn.
+  apply hoare_asgn. apply hoare_asgn. intros st H.
+  unfold assn_sub. simpl. unfold update. simpl. assumption.
+Qed.
 (** [] *)
 
 (** **** Exercise: 3 stars (hoarestate1)  *)

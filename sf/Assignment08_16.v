@@ -4,7 +4,7 @@ Require Export Assignment08_15.
 
 Lemma optimize_0plus_aexp_sound:
   atrans_sound optimize_0plus_aexp.
-Proof. 
+Proof.
   unfold atrans_sound. unfold aequiv. intros.
   induction a; try reflexivity; try (simpl; rewrite IHa1; rewrite IHa2; reflexivity).
   destruct a1; destruct a2;

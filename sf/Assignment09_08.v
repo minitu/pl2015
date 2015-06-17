@@ -57,8 +57,7 @@ Theorem parity_correct : forall m,
   END
     {{ fun st => st X = parity m }}.
 Proof.
-  intros.
-  eapply hoare_consequence_post.
+  intros. eapply hoare_consequence_post.
   apply hoare_consequence_pre with (fun st => parity (st X) = parity m).
   apply hoare_while. eapply hoare_consequence_pre. apply hoare_asgn.
   unfold assert_implies, assn_sub, update.

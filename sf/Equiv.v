@@ -284,13 +284,11 @@ Theorem IFB_false: forall b c1 c2,
     (IFB b THEN c1 ELSE c2 FI) 
     c2.
 Proof.
-  unfold bequiv. unfold cequiv. intros. simpl in H. split.
-  - intros. inversion H0. 
-    + subst. rewrite H in H6. inversion H6.
-    + subst. apply H7.
-  - intros. apply E_IfFalse. specialize H with st.
+  unfold bequiv. unfold cequiv. intros. simpl in H. split; intros.
+  - inversion H0; subst.
+    + rewrite H in H6. inversion H6.
     + assumption.
-    + assumption.
+  - apply E_IfFalse. apply H. assumption.
 Qed.
 (** [] *)
 
@@ -307,7 +305,7 @@ Proof.
   - intros. inversion H; subst.
     + apply E_IfFalse. simpl. rewrite H5. reflexivity. assumption.
     + apply E_IfTrue. simpl. rewrite H5. reflexivity. assumption.
-  - intros. inversion H. subst.
+  - intros. inversion H; subst.
     + simpl in *. rewrite negb_true_iff in H5. apply E_IfFalse. assumption. assumption.
     + subst. simpl in *. rewrite negb_false_iff in H5. apply E_IfTrue. assumption. assumption.
 Qed.
@@ -444,9 +442,11 @@ Theorem seq_assoc : forall c1 c2 c3,
   cequiv ((c1;;c2);;c3) (c1;;(c2;;c3)).
 Proof.
   split; intros.
-  - inversion H. subst. inversion H2. subst.
-    apply E_Seq with st'1. assumption. apply E_Seq with st'0. assumption. assumption.
-  - inversion H. subst. inversion H5. subst. apply E_Seq with st'1.
+  - inversion H; subst. inversion H2; subst.
+    apply E_Seq with st'1. assumption.
+    apply E_Seq with st'0. assumption. assumption.
+  - inversion H; subst. inversion H5; subst.
+    apply E_Seq with st'1.
     apply E_Seq with st'0. assumption. assumption. assumption.
 Qed.
 (** [] *)
@@ -465,7 +465,7 @@ Proof.
      Case "->". 
        inversion H; subst.  simpl.
        replace (update st X (st X)) with st.  
-       constructor. 
+       constructor.
        (* Stuck... *) Abort.
 
 (** Here we're stuck. The goal looks reasonable, but in fact it is not
@@ -529,7 +529,7 @@ Proof.
        inversion H; subst. simpl.
        replace (update st X (st X)) with st.  
        constructor. 
-       apply functional_extensionality. intro. 
+       apply functional_extensionality. intro.
        rewrite update_same; reflexivity.  
      Case "<-".
        inversion H; subst. 
@@ -545,6 +545,17 @@ Theorem assign_aequiv : forall X e,
   aequiv (AId X) e -> 
   cequiv SKIP (X ::= e).
 Proof.
+  split; intros; inversion H0; subst.
+  - assert (st' = (update st' X (st' X))).
+    apply functional_extensionality. intro.
+    rewrite update_same; reflexivity.
+    rewrite H1 at 2. apply E_Ass. rewrite <- H. reflexivity.
+  - assert (update st X (aeval st e) = st).
+    rewrite <- H. simpl. apply functional_extensionality. intro.
+    rewrite update_same; reflexivity.
+    rewrite H1. apply E_Skip.
+Qed.
+(*
   split; intros.
   - inversion H0. subst. assert (st' = (update st' X (aeval st' e))).
     unfold aequiv in H. rewrite <- H. simpl. apply functional_extensionality.
@@ -552,7 +563,7 @@ Proof.
   - inversion H0. subst. replace (update st X (aeval st e)) with st.
     constructor. apply functional_extensionality. intros. unfold aequiv in H.
     rewrite <- H. simpl. rewrite update_same; reflexivity.
-Qed.
+*)
 (** [] *)
 
 (* ####################################################### *)
@@ -745,7 +756,14 @@ Theorem CSeq_congruence : forall c1 c1' c2 c2',
   cequiv c1 c1' -> cequiv c2 c2' ->
   cequiv (c1;;c2) (c1';;c2').
 Proof. 
-  (* FILL IN HERE *) Admitted.
+  unfold cequiv. intros. split; intros.
+  - remember (c1;;c2) as cseq eqn:Heqcseq.
+    induction H1; inversion Heqcseq; subst; clear Heqcseq.
+    apply E_Seq with st'. rewrite <- H. assumption. rewrite <- H0. assumption.
+  - remember (c1';;c2') as c'seq eqn:Heqc'seq.
+    induction H1; inversion Heqc'seq; subst; clear Heqc'seq.
+    apply E_Seq with st'. rewrite H. assumption. rewrite H0. assumption.
+Qed.
 (** [] *)
 
 (** **** Exercise: 3 stars (CIf_congruence)  *)
@@ -753,7 +771,16 @@ Theorem CIf_congruence : forall b b' c1 c1' c2 c2',
   bequiv b b' -> cequiv c1 c1' -> cequiv c2 c2' ->
   cequiv (IFB b THEN c1 ELSE c2 FI) (IFB b' THEN c1' ELSE c2' FI).
 Proof.
-  (* FILL IN HERE *) Admitted.
+  unfold bequiv, cequiv. intros. split; intros.
+  - remember (IFB b THEN c1 ELSE c2 FI) as cif eqn:Heqcif.
+    induction H2; inversion Heqcif; subst; clear Heqcif.
+    apply E_IfTrue. rewrite H in H2. assumption. apply H0. assumption.
+    apply E_IfFalse. rewrite H in H2. assumption. apply H1. assumption.
+  - remember (IFB b' THEN c1' ELSE c2' FI) as c'if eqn:Heqc'if.
+    induction H2; inversion Heqc'if; subst; clear Heqc'if.
+    apply E_IfTrue. rewrite <- H in H2. assumption. apply H0. assumption.
+    apply E_IfFalse. rewrite <- H in H2. assumption. apply H1. assumption.
+Qed.
 (** [] *)
 
 (** *** *)
@@ -1093,7 +1120,15 @@ Proof.
          become constants after folding *)
       simpl. destruct (beq_nat n n0); reflexivity.
   Case "BLe". 
-    (* FILL IN HERE *) admit.
+    rename a into a1. rename a0 into a2. simpl.
+    remember (fold_constants_aexp a1) as a1' eqn:Heqa1'.
+    remember (fold_constants_aexp a2) as a2' eqn:Heqa2'.
+    replace (aeval st a1) with (aeval st a1').
+    replace (aeval st a2) with (aeval st a2').
+    destruct a1'; destruct a2'; try reflexivity.
+    simpl. destruct (ble_nat n n0); reflexivity.
+    subst. rewrite <- fold_constants_aexp_sound; reflexivity.
+    subst. rewrite <- fold_constants_aexp_sound; reflexivity.
   Case "BNot". 
     simpl. remember (fold_constants_bexp b) as b' eqn:Heqb'. 
     rewrite IHb.
@@ -1131,7 +1166,11 @@ Proof.
       apply trans_cequiv with c2; try assumption.
       apply IFB_false; assumption.
   Case "WHILE".
-    (* FILL IN HERE *) Admitted.
+    remember (fold_constants_bexp b) as b' eqn:Heqb'.
+    assert (bequiv b b'). rewrite Heqb'. apply fold_constants_bexp_sound.
+    destruct b' eqn:Hb'; try (apply CWhile_congruence; assumption);
+    try (apply WHILE_true; assumption); apply WHILE_false; assumption.
+Qed.
 (** [] *)
 
 (* ########################################################## *)

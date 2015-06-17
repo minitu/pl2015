@@ -104,13 +104,13 @@ Proof with eauto.
         assert (exists x0 t0, t1 = tabs x0 T11 t0).
         eapply canonical_forms_fun; eauto.
         destruct H1 as [x0 [t0 Heq]]. subst.
-        exists ([x0:=t2]t0)...
+        exists ([x0:=t2]t0)... (* eexists... *)
 
       SSCase "t2 steps".
-        inversion H0 as [t2' Hstp]. exists (tapp t1 t2')...
+        inversion H0 as [t2' Hstp]. exists (tapp t1 t2')... (* eexists... *)
 
     SCase "t1 steps".
-      inversion H as [t1' Hstp]. exists (tapp t1' t2)...
+      inversion H as [t1' Hstp]. exists (tapp t1' t2)... (* eexists... *)
 
   Case "T_If".
     right. destruct IHHt1...
@@ -119,7 +119,7 @@ Proof with eauto.
       destruct (canonical_forms_bool t1); subst; eauto.
 
     SCase "t1 also steps".
-      inversion H as [t1' Hstp]. exists (tif t1' t2 t3)...
+      inversion H as [t1' Hstp]. exists (tif t1' t2 t3)... (* eexists... *)
 Qed.
 
 (** **** Exercise: 3 stars, optional (progress_from_term_ind)  *)
@@ -132,7 +132,19 @@ Theorem progress' : forall t T,
 Proof.
   intros t.
   t_cases (induction t) Case; intros T Ht; auto.
-  (* FILL IN HERE *) Admitted.
+  - solve by inversion 2.
+  - inversion Ht; subst. right. remember H2 as H3. clear HeqH3. apply IHt1 in H2. destruct H2.
+    + remember H4 as H5. clear HeqH5. apply IHt2 in H4. destruct H4.
+      * assert (exists x0 t0, t1 = tabs x0 T11 t0).
+        eapply canonical_forms_fun; eauto. destruct H1 as [x0 [t0 Heq]]. subst.
+        eexists. auto.
+      * inversion H0 as [t2' Hstp]. eexists. eauto.
+    + inversion H as [t1' Hstp]. eexists. eauto.
+  - right. inversion Ht; subst. remember H3 as H4. clear HeqH4. apply IHt1 in H4. destruct H4.
+    + destruct (canonical_forms_bool t1); subst; eauto.
+    + destruct H as [t1' Hstp]. eexists. eauto.
+Qed.
+
 (** [] *)
 
 (* ###################################################################### *)
@@ -264,7 +276,7 @@ Lemma free_in_context : forall x t T Gamma,
 
 Proof.
   intros x t T Gamma H H0. generalize dependent Gamma. 
-  generalize dependent T. 
+  generalize dependent T.
   afi_cases (induction H) Case; 
          intros; try solve [inversion H0; eauto].
   Case "afi_abs".
@@ -281,7 +293,11 @@ Corollary typable_empty__closed : forall t T,
     empty |- t \in T  ->
     closed t.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros t T H x xf.
+  apply free_in_context with (T:=T) (Gamma:=\empty) in xf.
+  - inversion xf. inversion H0.
+  - assumption.
+Qed.
 (** [] *)
 
 (** Sometimes, when we have a proof [Gamma |- t : T], we will need to
@@ -574,8 +590,12 @@ Corollary soundness : forall t t' T,
 Proof.
   intros t t' T Hhas_type Hmulti. unfold stuck.
   intros [Hnf Hnot_val]. unfold normal_form in Hnf.
-  induction Hmulti.
-  (* FILL IN HERE *) Admitted.
+  induction Hmulti. 
+  - apply progress in Hhas_type. destruct Hhas_type; tauto.
+  - apply IHHmulti; try assumption.
+    eapply preservation. apply Hhas_type. assumption.
+Qed.
+  
 
 (* ###################################################################### *)
 (** * Uniqueness of Types *)
@@ -586,7 +606,17 @@ Proof.
     type. *)
 (** Formalize this statement and prove it. *)
 
-(* FILL IN HERE *)
+Theorem types_unique : forall t T T' Gamma,
+  Gamma |- t \in T -> Gamma |- t \in T' -> T' = T.
+Proof.
+  intros. generalize dependent T'. induction H; intros.
+  - inversion H0; subst. rewrite H in H3. inversion H3. reflexivity.
+  - inversion H0; subst. apply IHhas_type in H6. rewrite H6. reflexivity.
+  - inversion H1; subst. apply IHhas_type1 in H5. inversion H5. reflexivity.
+  - inversion H0; subst. reflexivity.
+  - inversion H0; subst. reflexivity.
+  - inversion H2; subst. apply IHhas_type2 in H9. assumption.
+Qed.
 (** [] *)
 
 (* ###################################################################### *)
@@ -595,7 +625,6 @@ Proof.
 (** **** Exercise: 1 star (progress_preservation_statement)  *)
 (** Without peeking, write down the progress and preservation
     theorems for the simply typed lambda-calculus. *)
-(** [] *)
 
 
 (** **** Exercise: 2 stars (stlc_variation1)  *)

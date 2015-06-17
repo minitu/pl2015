@@ -19,10 +19,8 @@ Example hoare_asgn_example4 :
 Proof.
   eapply hoare_seq. apply hoare_asgn.
   eapply hoare_consequence_pre. apply hoare_asgn.
-  unfold assn_sub, assert_implies. intros. simpl.
-  split.
-  - apply update_neq. unfold not. intros. inversion H0.
-  - apply update_eq.
+  unfold assert_implies, assn_sub. simpl. intros.
+  split; unfold update; reflexivity.
 Qed.
 
 (*-- Check --*)
