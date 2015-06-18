@@ -2,14 +2,6 @@ Require Export Assignment12_05.
 
 (* problem #06: 10 points *)
 
-Lemma tloop_back: exists p q, tapp tloop (tnat 0) ==> p /\ p ==> q /\ q ==> tapp tloop (tnat 0).
-  eexists. eexists. unfold tloop. split.
-  - eauto.
-  - split.
-    + eauto.
-    + simpl. constructor. constructor.
-Qed.
-
 Theorem MoreStlc_value_is_nf: forall v t,
   value v -> v ==> t -> False.
 Proof with eauto.
@@ -31,6 +23,17 @@ Proof with eauto.
   try replace t1'0 with t1';
   try replace t2'0 with t2';
   eauto; exfalso...
+Qed.
+
+(* MoreStlc_value_is_nf & MoreStlc_deterministic
+   from https://github.com/snu-sf/pl2015/issues/154 *)
+
+Lemma tloop_back: exists p q, tapp tloop (tnat 0) ==> p /\ p ==> q /\ q ==> tapp tloop (tnat 0).
+  eexists. eexists. unfold tloop. split.
+  - eauto.
+  - split.
+    + eauto.
+    + simpl. constructor. constructor.
 Qed.
 
 Theorem tloop_diverges:
